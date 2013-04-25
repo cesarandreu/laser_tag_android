@@ -20,9 +20,9 @@
 
 cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
   var exec = require('cordova/exec');
-  
+
   var Bluetooth = function() {};
-  
+
   /**
    * Check if Bluetooth API is supported on this platform
    *
@@ -36,7 +36,7 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.isSupported = function(successCallback,failureCallback) {
     return exec(successCallback, failureCallback, 'BluetoothPlugin', 'isSupported', []);
-  }
+  };
 
   /**
    * Enable Bluetooth
@@ -51,8 +51,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.enable = function(successCallback,failureCallback) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'enable', []);
-  }
-  
+  };
+
   /**
    * Disable Bluetooth
    *
@@ -66,8 +66,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.disable = function(successCallback,failureCallback) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'disable', []);
-  }
-  
+  };
+
   /**
    * Checks if Bluetooth is enabled
    *
@@ -81,8 +81,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.isEnabled = function(successCallback,failureCallback) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'isEnabled', []);
-  }
-  
+  };
+
   /**
    * Returns device address as string. For example, "00:11:22:AA:BB:CC".
    *
@@ -96,8 +96,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.getAddress = function(successCallback,failureCallback) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'getAddress', []);
-  }
-  
+  };
+
   /**
    * Returns device name as string.
    *
@@ -111,8 +111,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.getName = function(successCallback,failureCallback) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'getName', []);
-  }
-  
+  };
+
   /**
    * Request discoverable from user for given duration
    *
@@ -128,8 +128,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.requestDiscoverable = function(successCallback,failureCallback, duration) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'requestDiscoverable', [duration]);
-  }
-  
+  };
+
   /**
    * Search for devices  and list them
    *
@@ -149,8 +149,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.startDiscovery = function(successCallback,failureCallback) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'startDiscovery', []);
-  }
-  
+  };
+
   /**
    * Cancels ongoing discovery
    *
@@ -165,8 +165,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.cancelDiscovery = function(successCallback,failureCallback) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'cancelDiscovery', []);
-  }
-  
+  };
+
   /**
    * Return bonded (paired) devices
    * 
@@ -186,8 +186,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.getBondedDevices = function(successCallback,failureCallback) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'getBondedDevices', []);
-  }
-  
+  };
+
   /**
    * Return list of available UUIDs for a given device
    * Needs minimum SDK API 15
@@ -204,8 +204,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.fetchUUIDs = function(successCallback,failureCallback,address) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'fetchUUIDs', [address]);
-  }
-  
+  };
+
   /**
    * Open an RFComm channel for a given device & uuid endpoint
    * Insecure connection needs minimum SDK API 10
@@ -226,8 +226,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.connect = function(successCallback,failureCallback,address,uuid, secure) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'connect', [address, uuid, secure]);
-  }
-  
+  };
+
   /**
    * Close a RFComm channel for a given socket-id
    * 
@@ -243,9 +243,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.disconnect = function(successCallback,failureCallback,socketId) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'disconnect', [socketId]);
-  }
-  
-  
+  };
+
   /**
    * Listens incoming connections
    * Insecure listening needs minimum SDK API 10
@@ -266,8 +265,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.listen = function(successCallback,failureCallback,name,uuid,secure) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'listen', [name,uuid,secure]);
-  }
-  
+  };
+
   /**
    * Cancels listening incoming connections
    * 
@@ -282,8 +281,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.cancelListening = function(successCallback,failureCallback) {
     return exec(successCallback, failureCallback, 'BluetoothPlugin', 'cancelListening', []);
-  }
-  
+  };
+
   /**
    * Registers a callback function which called after a successful read
    * 
@@ -302,8 +301,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
   Bluetooth.prototype.read = function(successCallback,failureCallback,socketId,bufferSize) {
 	  bufferSize = typeof bufferSize !== 'undefined' ? bufferSize : 1024;
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'read', [socketId,bufferSize]);
-  }
-  
+  };
+
   /**
    * Write to a connected socket
    * 
@@ -321,8 +320,8 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    */
   Bluetooth.prototype.write = function(successCallback,failureCallback,socketId,jsonArray) {
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'write', [socketId,jsonArray]);
-  }
-  
+  };
+
   var bluetooth = new Bluetooth();
   module.exports = bluetooth;
 });

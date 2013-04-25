@@ -85,7 +85,8 @@ public class BluetoothPlugin extends CordovaPlugin {
 	
 	private final int REQUEST_CODE_ENABLE = 1;
 	private final int REQUEST_CODE_DISCOVERABLE = 2;
-	
+
+
 	
 	private BluetoothAdapter m_bluetoothAdapter = null;
 	private BPBroadcastReceiver m_bpBroadcastReceiver = null;
@@ -180,11 +181,22 @@ public class BluetoothPlugin extends CordovaPlugin {
 			this.callback_enable = callbackContext;
 			PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
 			pluginResult.setKeepCallback(true);
+		
+			if ( ! m_bluetoothAdapter.isEnabled() )  {
+					
+				//I don't know if I should be doing this directly.
+				//But I inform the users, and the commented out thing below was crashing.
+				m_bluetoothAdapter.enable();
+				
+			}
+
+			/*
 			if ( ! m_bluetoothAdapter.isEnabled() )  {
 				this.cordova.startActivityForResult(this, 
 						new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), 
 						this.REQUEST_CODE_ENABLE);
 			}
+			*/
 			callbackContext.sendPluginResult(pluginResult);
 			return true;
 		}
@@ -444,13 +456,13 @@ public class BluetoothPlugin extends CordovaPlugin {
 				callbackContext.error(e.getMessage());
 			}
 			return true;
-		}
+		} 
 		
 		
 		return false;
 	}
 
-	
+
 
 	/**
 	 * Helper class for handling all bluetooth based events
@@ -541,11 +553,20 @@ public class BluetoothPlugin extends CordovaPlugin {
 	 * @param intent
 	 */
 	public void returnUUIDs(Intent intent) {
-		this.callback_uuids.sendPluginResult(
-				new PluginResult(PluginResult.Status.OK, m_gotUUIDs));
+		
+		//If callback_uuids is null, then don't try sending anything to it.
+		//This was causing the app to crash.
+		if(this.callback_uuids == null){
+			logErr("Callback UUIDs was called and it's null.");
+		} else {
+			this.callback_uuids.sendPluginResult(
+					new PluginResult(PluginResult.Status.OK, m_gotUUIDs));		
+		}
+		
+
 	}
 	
-	
+
 	
 	/**
 	 * helper function
@@ -673,7 +694,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 					callback_listen.sendPluginResult(pluginResult);			
 				} 
 			});
-		}
+		}	
 		public void cancel() {
 			synchronized (ListenThread.this) {
 				m_running = false;
@@ -699,7 +720,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 			private final BufferedReader mm_bufferedReader;
 			public final int socketId;
 			//public final int mm_bufferSize;
-			
+		
 			//public ReadThread(BluetoothSocket socket, int socketId, int bufferSize) {
 			public ReadThread(BluetoothSocket socket, int socketId) {
 				this.socketId = socketId;
@@ -713,13 +734,13 @@ public class BluetoothPlugin extends CordovaPlugin {
 				InputStreamReader isr = new InputStreamReader(in);
 				mm_bufferedReader = new BufferedReader(isr);
 			}
-			
+
 			@Override
 			public void run() {
 				logDbg("ReadThread::run()");
 				while(true) {
 					try {
-						
+					
 						String response = new String(mm_bufferedReader.readLine());
 						logDbg("response = " + response);
 						if(!response.equals(null)){
@@ -731,9 +752,9 @@ public class BluetoothPlugin extends CordovaPlugin {
 							} catch (JSONException e) {
 								logErr("Could not parse string: " + e.getMessage());
 							}
-
+							
 						}
-						
+				
 						/*
 						char[] buffer = new char [mm_bufferSize];
 						if (mm_bufferedReader.read(buffer) >= 0) {

@@ -3,86 +3,115 @@
 
   <head>
 
-    <meta name="viewport" content="width=320; user-scalable=no" />
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <!-- <meta name="viewport" content="width=320; user-scalable=no" /> -->
+    <!-- <meta http-equiv="Content-type" content="text/html; charset=utf-8"> -->
 
-    <title>Phonegap - BluetoothPlugin Sample</title>
+    <title>Laser Tag Reloaded!</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" type="text/css" href="css/jquery-mobile.css">
 
     <script type="text/javascript" charset="utf-8" src="cordova-2.6.0.js"></script>
     <script type="text/javascript" charset="utf-8" src="Bluetooth.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
-
-    <script src="http://192.168.1.106:8080/target/target-script-min.js#anonymous"></script>
-
-    <link rel="stylesheet" type="text/css" href="index.css">
-    <script type="text/javascript" charset="utf-8" src="index.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/underscore.js"></script>
+    <script type="text/javascript" charset="utf-8" src="app.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery-mobile.js"></script>
+    <!-- <script src="http://192.168.1.106:8080/target/target-script-min.js#anonymous"></script> -->
 
   </head>
 
-  <body onload="onload();">
-  
-    <div id="page-content">
-      <div>
-        Enable Bluetooth visibility to other devices for <b>20</b> seconds : 
-        <input type="button" id="request-discoverable-button" value="Request Discoverable" onclick="requestDiscoverable(20);" />
+  <body>
+
+    <!-- Splash Screen -->
+    <!--
+    <div>
+
+    </div>
+    -->
+    <!-- End Splash Screen -->
+
+    <!-- Bluetooth Page -->
+    <div id="bluetooth_page" data-role="page">
+      <div data-role="header">
+        <h1>Bluetooth</h1>
       </div>
-      
-      <div>
-        Enable or disable Bluetooth : 
-        <input type="button" id="enable-disable-button" value="Off" onclick="toggleEnableDisable(this)" />
-        
-        <div>
-          Get device address : 
-          <input type="button" id="address-button" value="Get Address" onclick="getAddress();" />
-        </div>
-        
-        <div>
-          Get device name : 
-          <input type="button" id="name-button" value="Get Name" onclick="getName();" />
-        </div>
-        
-        <div>
-          Discovery Devices : 
-          <input type="button" id="discovery-button" value="Discovery" onclick="toggleDiscovery(this)" />
-          <br />
-          Found Devices : 
-          <select id="discovered-device-list"></select>
-        </div>
-        
-        <div>
-          Get Bonded (Paired) Devices : 
-          <input type="button" id="bonded-devices-button" value="Bonded Devices" onclick="bondedDevices();" />
-          <br />
-          Bonded Devices : 
-          <select id="bonded-device-list"></select> 
-          <div>
-            Get UUIDs of selected device : 
-            <input type="button" id="fetch-uuids-button" value="Fetch UUIDs" onclick="fetchUUIDs();" />
-            <br />
-            UUIDs : 
-            <select id="uuid-list"></select>
-          </div>
-          <div>
-          	 Will connect to UUID=<b id="connecting-uuid"></b> : 
-             <input type="checkbox" id="secure-connect-check">Secure</input>
-             <input type="button" id="connect-button" value="Connect" onclick="connect();" />
-             <input type="button" id="disconnect-button" value="Disconnect" onclick="disconnect();" />
-             <br />
-             <input type="text" id="message-text" value="Hello!" />
-             <input type="button" id="send-message-button" value="Send" onclick="sendMessage();" />
-           </div>
-        </div>
-        
-        <div>
-          Listen as named <b id="listening-name"></b>, for UUID=<b id="listening-uuid"></b> : 
-          <input type="checkbox" id="secure-listen-check">Secure</input>
-          <input type="button" id="listen-button" value="Listen" onclick="toggleListen(this);" />
-          <br />
-          <textarea id="listen-textarea" rows="5" cols="20" readonly></textarea>
+
+      <div data-role="content">
+
+        <div id="bluetooth_instructions">
+          <h3> Instructions </h3>
+          <p>Please make sure the bluetooth is turned on.
+          After the bluetooth is on, press the button below.
+          If your device does not show up, you may not be paried with the gun.
+          Exit the application, pair with the system, and try again.</p>
         </div>
 
-      </div> <!-- Enable Disable Bluetooth -->
-       
-     </div> <!-- page context -->
+        <div data-role="fieldcontain" id="bluetooth_switch">
+
+          <label for="bluetooth_state"><h3>Bluetooth state</h3></label>
+
+          <select id="bluetooth_state" name="bluetooth_state" data-role="slider">
+            <option value="off">OFF</option>
+            <option value="on">ON</option>
+          </select>
+        </div>
+
+        <!-- This button takes you to the bluetooth devices. -->
+        <!-- The HREF should take you to a loading page. -->
+          <a id="bluetooth_devices_button" data-role="button" href="" data-rel="dialog">Select Bluetooth Device</a>
+
+      </div>
+
+    </div>
+    <!-- End Bluetooth Page -->
+
+    <!-- Bluetooth Devices Page -->
+    <div id="bluetooth_devices" data-role="page">
+      <div data-role="header">
+        <h3>Bluetooth Devices</h3>
+      </div>
+
+      <div data-role="content">
+        <h3>Select a device below</h3>
+
+        <ul id="bluetooth_device_list" data-role="listview">
+          <!--
+          <li><a>Device 1</a></li>
+          -->
+        </ul>
+
+      </div>
+
+    </div>
+    <!-- End Bluetooth Devices Page -->
+
+
+    <!-- Login Page -->
+    <div id="login_page" data-role="page">
+      <div data-role="header">
+        <h1>Laser Tag Reloaded</h1>
+      </div>
+
+      <div data-role="content">
+        
+        <div data-role="fieldcontain">
+          <input id="username_login" placeholder="Username" type="text">
+        </div>
+        
+        <div data-role="fieldcontain">
+          <input id="password_login" placeholder="Password" type="password">
+        </div>
+
+        <input id="login_button" type="submit" value="Login">
+
+      </div>
+    </div>
+    <!-- End Login Page -->
+
+
+
+
   </body>
 </html>
