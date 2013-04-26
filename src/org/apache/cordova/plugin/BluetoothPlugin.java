@@ -99,7 +99,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 	public CallbackContext callback_read = null;
 	public CallbackContext callback_bluetoothSettings = null;
 	
-	
+		
 	private ArrayList<BluetoothSocket> m_sockets = new ArrayList<BluetoothSocket>();
 	private JSONArray m_discoveredDevices = null;
 	
@@ -188,8 +188,8 @@ public class BluetoothPlugin extends CordovaPlugin {
 				//But I inform the users, and the commented out thing below was crashing.
 				m_bluetoothAdapter.enable();
 				
-			}
-
+			}			
+				
 			/*
 			if ( ! m_bluetoothAdapter.isEnabled() )  {
 				this.cordova.startActivityForResult(this, 
@@ -323,7 +323,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 			return true;
 		}
 		else if ( ACTION_CONNECT.equals(action) )
-		{
+		{	
 			final String address = args.getString(0);
 			final String uuid = args.getString(1);
 			final boolean secure = args.getBoolean(2);
@@ -334,19 +334,20 @@ public class BluetoothPlugin extends CordovaPlugin {
 					try {
 						logDbg("Connecting...");
 						// Cancel discovery because it will slow down the connection
-						if(m_bluetoothAdapter.isDiscovering())
+						if(m_bluetoothAdapter.isDiscovering()){
 							m_bluetoothAdapter.cancelDiscovery();
-						BluetoothDevice bluetoothDevice = 
-								m_bluetoothAdapter.getRemoteDevice(
-										address);
+						}
+							
+						BluetoothDevice bluetoothDevice = m_bluetoothAdapter.getRemoteDevice(address);
+						
 						if (secure) {
 							socket = connectSecureHelper(
 									bluetoothDevice, 
 									UUID.fromString(uuid));
-						}
-						else {
+						}	
+						else {	
 							socket = connectInsecureHelper(
-									bluetoothDevice, 
+									bluetoothDevice, 								
 									UUID.fromString(uuid));
 						}
 					} catch (Exception e) {
@@ -361,7 +362,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 								new PluginResult(
 										PluginResult.Status.OK, socketId));
 					}
-					else {
+					else {	
 						callback_connect.error(0);
 					}
 				}
@@ -386,7 +387,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 						m_readThreads.remove(i);
 						break;
 					}
-				}
+				}			
 				callbackContext.success();
 			} catch (Exception e) {
 				logErr(e.toString() + " / " + e.getMessage());
@@ -599,26 +600,26 @@ public class BluetoothPlugin extends CordovaPlugin {
 					Build.VERSION_CODES.GINGERBREAD_MR1;
 			logErr(msg);
 			return null;
-		}
+		}	
 		BluetoothSocket bluetoothSocket = 
 				device.createInsecureRfcommSocketToServiceRecord(uuid);
 		bluetoothSocket.connect();
 		return bluetoothSocket;
 	}
-	
-	
+			
+		
 	// helper log functions
 	private void logDbg(String msg) {
 		Log.d("BluetoothPlugin", msg);
 	}
-
 	
+					
 	
 	private void logErr(String msg) {
 		Log.e("BluetoothPlugin", msg);
 	}
 
-	
+					
 	/**
 	 * Listen Thread
 	 */
@@ -658,9 +659,9 @@ public class BluetoothPlugin extends CordovaPlugin {
 								new PluginResult(
 										PluginResult.Status.ERROR, msg));
 						break;
-					}
-					
-					//Debugging
+					}	
+						
+					//Debugging	
 					logDbg("It started blocking");
 					
 					bluetoothSocket = mm_serverSocket.accept();
@@ -694,7 +695,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 					callback_listen.sendPluginResult(pluginResult);			
 				} 
 			});
-		}	
+		}		
 		public void cancel() {
 			synchronized (ListenThread.this) {
 				m_running = false;

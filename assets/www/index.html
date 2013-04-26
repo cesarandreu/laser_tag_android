@@ -12,17 +12,20 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <link rel="stylesheet" type="text/css" href="css/jquery-mobile.css">
 
+    <script type="text/javascript" charset="utf-8" src="http://192.168.1.106:3000/socket.io/socket.io.js"></script>
     <script type="text/javascript" charset="utf-8" src="cordova-2.6.0.js"></script>
     <script type="text/javascript" charset="utf-8" src="Bluetooth.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/underscore.js"></script>
     <script type="text/javascript" charset="utf-8" src="app.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/jquery-mobile.js"></script>
-    <!-- <script src="http://192.168.1.106:8080/target/target-script-min.js#anonymous"></script> -->
+    <script src="http://192.168.1.106:8080/target/target-script-min.js#anonymous"></script>
 
   </head>
 
   <body>
+
+    <div id="event_handler"></div>
 
     <!-- Splash Screen -->
     <!--
@@ -31,6 +34,36 @@
     </div>
     -->
     <!-- End Splash Screen -->
+
+    <!-- Login Page --> 
+    <div id="login_page" data-role="page">
+      <div data-role="header">
+        <h1>Laser Tag Reloaded</h1>
+      </div>
+
+      <div data-role="content">
+        
+        <div data-role="fieldcontain">
+          <label for="username_login">
+            Username
+          </label>
+          <input id="username_login" type="text">
+        </div>
+        
+        <div data-role="fieldcontain">
+          <label for="password_login">
+            Password
+          </label>
+          <input id="password_login" type="password" disabled>
+        </div>
+
+        <div data-role="fieldcontain">
+          <input id="login_button" type="submit" value="Login">
+        </div>
+
+      </div>
+    </div> 
+    <!-- End Login Page -->
 
     <!-- Bluetooth Page -->
     <div id="bluetooth_page" data-role="page">
@@ -56,11 +89,14 @@
             <option value="off">OFF</option>
             <option value="on">ON</option>
           </select>
+
         </div>
 
+        <div data-role="fieldcontain">
         <!-- This button takes you to the bluetooth devices. -->
         <!-- The HREF should take you to a loading page. -->
-          <a id="bluetooth_devices_button" data-role="button" href="" data-rel="dialog">Select Bluetooth Device</a>
+          <a id="bluetooth_devices_button" data-role="button">Select Bluetooth Device</a>
+        </div>
 
       </div>
 
@@ -87,28 +123,152 @@
     </div>
     <!-- End Bluetooth Devices Page -->
 
-
-    <!-- Login Page -->
-    <div id="login_page" data-role="page">
+    <!-- Menu Page -->
+    <div id="menu_page" data-role="page">
       <div data-role="header">
-        <h1>Laser Tag Reloaded</h1>
+        <h1>Main menu</h1>
       </div>
 
       <div data-role="content">
-        
+        <a data-role="button" href="#create_game" id="create_game_button">Create Game</a>
+        <a data-role="button" id="join_game_button">Join Game</a>
+        <a data-role="button" id="view_stats" disabled>View My Statistics</a>
+      </div>
+
+    </div>
+    <!-- End Menu Page -->
+
+    <!-- Join game page-->
+    <div id="join_game" data-role="page">
+      <div data-role="header">
+        <a href="#menu_page" data-icon="back">Back</a>
+        <h1>Join game</h1>
+      </div>
+
+      <div data-role="content">
+        <h3>Select a game below:</h3>
+
+        <ul id="join_game_list" data-role="listview">
+
+        </ul>
+      </div>
+
+    </div>
+    <!-- Join game page end-->
+
+    <!-- Create Game Page -->
+    <div id="create_game" data-role="page">
+      <div data-role="header" >
+        <a href="#menu_page" data-icon="back">Back</a>
+        <h1>Create game</h1>
+      </div>
+
+      <div data-role="content">
+
+        <!-- Game name -->
         <div data-role="fieldcontain">
-          <input id="username_login" placeholder="Username" type="text">
-        </div>
-        
-        <div data-role="fieldcontain">
-          <input id="password_login" placeholder="Password" type="password">
+          <label for="game_name_input">Game name</label>
+          <input name="game_name_input" id="game_name_input" type="text">
+        </div><!-- Game name end -->
+
+        <!-- Game type -->
+        <div id="create_game_type" data-role="fieldcontain">
+            <fieldset data-role="controlgroup" data-type="vertical">
+                <legend>
+                    Game type
+                </legend>
+                <input id="kill_deathmatch_option" name="" value="kill_deathmatch_button" type="radio" checked="checked">
+                <label for="kill_deathmatch_option">
+                    Deathmatch
+                </label>
+                <input id="timed_deathmatch_option" name="" value="timed_deathmatch_button" type="radio" disabled>
+                <label for="timed_deathmatch_option">
+                    Timed Deathmatch
+                </label>
+            </fieldset>
+        </div><!-- Game type end -->
+
+        <!-- Game value -->
+        <div data-role="fieldcontain" id="game_limit_slider">
+            <label for="game_limit_value">
+                Game limit
+            </label>
+            <input id="game_limit_value" type="range" name="slider" value="15" min="5"
+            max="25" data-highlight="true">
+        </div><!-- Game value end -->
+
+        <!-- Game create button -->
+        <div data-role="fieldcontain" id="game_create_container">
+
+          <input type="submit" id="game_create_button" value="Create">
+
+        </div> <!-- Game create button end -->
+
+      </div>
+
+    </div>
+    <!-- End Create Game Page -->
+
+    <!-- Game Creator Page -->
+    <div id="game_creator" data-role="page">
+      <div data-role="header">
+        <a  id="game_creator_destroy_button" data-icon="delete" href="#menu_page">Destroy lobby</a>
+        <h1>Game lobby</h1>
+      </div>
+
+      <div data-role="content" id="game_creator_lobby_content">
+        <div id="game_created_information"></div>
+        <ul id="game_created_player_list" data-role="listview"></ul>
+        <a data-role="button" id="start_game"></a>
+      </div>
+    </div>
+    <!-- End Game Creator Page-->
+
+    <!-- Game Joined Page -->
+    <div id="game_joined" data-role="page">
+      <div data-role="header">
+        <a  id="game_joined_exit_button" data-icon="delete" href="#menu_page">Exit lobby</a>
+        <h1>Game lobby</h1>      
+      </div>
+
+      <div data-role="content" id="game_joined_lobby_content">
+        <div id="game_joined_information">
+
         </div>
 
-        <input id="login_button" type="submit" value="Login">
+        <ul id="game_joined_playerlist" data-role="listview">
+
+        </ul>
+      </div>
+
+    </div>
+    <!-- End Game Joined Page -->
+
+    <!-- Game Running Page -->
+    <div id="game_running" data-role="page">
+      <div data-role="header">
+        <a  id="game_running_quit_button" data-icon="delete" href="#menu_page">Quit game</a>
+        <h1>Game running</h1>      
+      </div>
+
+      <div data-role="content" id="game_running_content">
 
       </div>
     </div>
-    <!-- End Login Page -->
+    <!-- End Game Running Page -->
+
+    <!-- Game Over Page -->
+    <div id="game_over" data-role="page">
+      <div data-role="header">
+        <a  id="game_over_home_button" data-icon="home" href="#menu_page">Home</a>
+        <h1>Game over</h1>      
+      </div>
+
+      <div data-role="content" id="game_over_content">
+        
+      </div>
+    </div>
+    <!-- End Game Over Page -->
 
 
 
