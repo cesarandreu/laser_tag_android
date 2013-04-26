@@ -347,7 +347,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 						}	
 						else {	
 							socket = connectInsecureHelper(
-									bluetoothDevice, 								
+									bluetoothDevice, 									
 									UUID.fromString(uuid));
 						}
 					} catch (Exception e) {
@@ -599,21 +599,21 @@ public class BluetoothPlugin extends CordovaPlugin {
 			String msg = "Not supported, minimum SDK version is :" + 
 					Build.VERSION_CODES.GINGERBREAD_MR1;
 			logErr(msg);
-			return null;
+			return null;	
 		}	
 		BluetoothSocket bluetoothSocket = 
 				device.createInsecureRfcommSocketToServiceRecord(uuid);
 		bluetoothSocket.connect();
 		return bluetoothSocket;
 	}
+				
 			
-		
 	// helper log functions
 	private void logDbg(String msg) {
 		Log.d("BluetoothPlugin", msg);
 	}
 	
-					
+							
 	
 	private void logErr(String msg) {
 		Log.e("BluetoothPlugin", msg);

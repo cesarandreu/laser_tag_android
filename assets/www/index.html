@@ -133,10 +133,28 @@
         <a data-role="button" href="#create_game" id="create_game_button">Create Game</a>
         <a data-role="button" id="join_game_button">Join Game</a>
         <a data-role="button" id="view_stats" disabled>View My Statistics</a>
+        <a data-role="button" id="demo_preview" href="#demo_page">Demo</a>
       </div>
 
     </div>
     <!-- End Menu Page -->
+
+    <!-- Demo Page -->
+    <div id="demo_page" data-role="page">
+      <div data-role="header">
+        <h1>Demo</h1>
+      </div>
+
+      <div data-role="content">        
+        <a data-role="button" onclick="game_confirm();">Confirm Connected</a>
+        <a data-role="button" onclick="game_new()">New Game</a>
+        <a data-role="button" onclick="game_information('Bob', 5, 1, 0);">Information Game</a>
+        <a data-role="button" onclick="game_start();">Start Game</a>
+        <a data-role="button" onclick="game_dataAcknowledge(128);">Data Acknowledge Game</a>
+        <a data-role="button" onclick="game_end(1);">End Game</a>
+      </div>
+    </div>
+    <!-- Demo Page End -->
 
     <!-- Join game page-->
     <div id="join_game" data-role="page">
@@ -219,7 +237,7 @@
       <div data-role="content" id="game_creator_lobby_content">
         <div id="game_created_information"></div>
         <ul id="game_created_player_list" data-role="listview"></ul>
-        <a data-role="button" id="start_game"></a>
+        <a data-role="button" id="start_game">Start Game</a>
       </div>
     </div>
     <!-- End Game Creator Page-->
@@ -252,7 +270,30 @@
       </div>
 
       <div data-role="content" id="game_running_content">
+        <div class='ui-grid-b'>
+          <div class="ui-block-a">
 
+          <div id="black_a_info"> Name, number</div>
+          <div id="black_a_shotsfired">Shots fired</div>
+
+          </div>
+
+          <div class="ui-block-b">
+
+          <div id="block_b_gps">
+            <ul data-role="listview" id="gps_ul"></ul>
+          </div>
+          
+          <div id="block_b_score">Your current score</div> 
+
+          </div>
+
+          <div class="ui-block-c">
+          <div id="block_c_hits"> Hit information</div>  
+            
+          </div>
+
+        </div>
       </div>
     </div>
     <!-- End Game Running Page -->

@@ -38,7 +38,32 @@ $.when(jqmReady, pgReady).then(function () {
         //Now we handle events here!
         //alert('Item received! - ' + item);
         handleItems(item);
+      });
 
+      //This runs.
+      socket.on('game_setup', function (response) {
+        if (gameName == response.gameName) {
+          for(var i=0; i<playerList.length; i++){
+            if(playerList[i].name == 'Cesar'){
+              playerNumber=playerList[i].number;
+              break;
+            }
+          }
+          socket.emit('game_is_ready', {room: gameName, gameType: 'A', limit: response.limit, enemyCount: (playerList.length - 1), list: playerList, player: playerName, number: playerNumber});
+        }
+
+      });
+
+      socket.on('game_begin', function(response){
+        hitData = [];
+        gameLimit = response.limit;
+        game_information(response.player, response.number, response.limit, response.enemyNumber, response.playerList);
+        game_start();
+
+      });
+
+      socket.on('game_over', function(response) {
+        game_over(0);
       });
 
       //Checks if it's enabled or not.
@@ -149,14 +174,14 @@ $.when(jqmReady, pgReady).then(function () {
                     bluetoothUUID = uuidArray[0];
 
                     //Then we connect.
-                    bluetoothPlugin.connect(function(socket) {
-                      bluetoothSocket = socket;
+                    bluetoothPlugin.connect(function(BTsocket) {
+                      bluetoothSocket = BTsocket;
                       
-                      //This is how we handle data from the bluetooth socket
+                      //This is how we handle data from the bluetooth BTsocket
                       bluetoothPlugin.read(function (readItem) {
                         $('#event_handler').trigger('new_item', [readItem]);
                       }, function(error) {
-                        alert('Error reading from socket: ' + error);
+                        alert('Error reading from BTsocket: ' + error);
                       }, bluetoothSocket);
                       
                       //This prepares the message which we'll send to the MCU.
@@ -332,8 +357,17 @@ $.when(jqmReady, pgReady).then(function () {
         });
 
         socket.emit('get_updated_information');
+
+
         $.mobile.changePage('#game_joined');
         $('#game_joined_playerlist').listview('refresh');
+      });
+
+
+      //This button is available if you're the game creator.
+      $('#start_game').on('tap', function () {
+        alert('You pressed start!');
+        socket.emit('server_prepare_everyone', {room: gameName, type: gameType, limit: gameLimit, enemyCount: (playerList.length - 1), list: playerList});
       });
 
 
@@ -342,6 +376,120 @@ $.when(jqmReady, pgReady).then(function () {
   });
 
 });
+
+function handleHitData (received_item) {
+  //First we acknowledge the data by sending it out online.
+  socket.emit('got_hit', received_item);
+
+  //Then we send the acknowledge to the MCU, so it can get deleted there.
+  game_dataAcknowledge(received_item.hitNumber);
+
+
+}
+
+function game_dataAcknowledge (hitNumber) {
+  var message = [];
+  var checkString = '#A,'+hitNumber+',# ';
+  for (var i=0; i < checkString.length; i++) {
+    message[i] = checkString.charCodeAt(i);
+  }
+  bluetoothPlugin.write(function () {
+    console.log('game_new() ran fine.');
+  }, function (error) {
+    console.log('Error writing game start: ' + error);
+  }, bluetoothSocket, message);
+}
+
+//This is currently hardcoded for only Deathmatch.
+function game_information (playerName, playerNumber, gameLimit, enemyNumber, playerList) {
+  var message = [];
+  var arrayToSend = [];
+
+  for(var k=0; k < enemyNumber; k++){
+    if (enemyArray[k].name == playerName) { 
+      playerNumber = enemyArray[k].number;
+    } else {
+      arrayToSend.push(enemyArray[k]);
+    }
+  }
+  if (playerNumber === 0) {
+    console.log('Your playerNumber is zero! Something might be wrong.');
+  }
+
+  var helpString = '';
+  for(var j=0; j < arrayToSend.length; j++){
+    helpString = (helpString + enemyArray[j].number + ',');
+  }
+
+  //Currently hardcoded with Deathmatch.
+  var checkString = '#I,A,'+playerNumber+','+gameLimit+','+enemyNumber+','+helpString+'# ';
+  console.log('Checked string is: ' + checkString);
+  for (var i=0; i < checkString.length; i++) {
+    message[i] = checkString.charCodeAt(i);
+  }
+
+  bluetoothPlugin.write(function () {
+    console.log('New game written correctly!');
+  }, function (error) {
+    console.log('Error writing game information: ' + error);
+  }, bluetoothSocket, message);
+}
+
+
+function game_confirm () {
+  var message = [];
+  var checkString = '#C,# ';
+  for (var i=0; i < checkString.length; i++) {
+    message[i] = checkString.charCodeAt(i);
+  }
+  bluetoothPlugin.write(function() {
+    console.log('game_confirm() ran fine.');
+  }, function(error) {
+    alert('Error writing game confirm: ' + error);
+  }, bluetoothSocket, message);
+}
+
+function game_new () {
+  var message = [];
+  var checkString = '#N,# ';
+  for (var i=0; i < checkString.length; i++) {
+    message[i] = checkString.charCodeAt(i);
+  }
+  bluetoothPlugin.write(function () {
+    console.log('game_new() ran fine.');
+  }, function (error) {
+    console.log('Error writing game start: ' + error);
+  }, bluetoothSocket, message);
+}
+
+function game_start () {
+  var message = [];
+  var checkString = '#S,# ';
+  for (var i=0; i < checkString.length; i++) {
+    message[i] = checkString.charCodeAt(i);
+  }
+  bluetoothPlugin.write(function () {
+    console.log('Start game written correctly!');
+  }, function (error) {
+    console.log('Error writing game start: ' + error);
+  }, bluetoothSocket, message);
+}
+
+function game_end (gameOverNumber) {
+  var message = [];
+  var checkString = '#O,'+gameOverNumber+',# ';
+  for (var i=0; i < checkString.length; i++) {
+    message[i] = checkString.charCodeAt(i);
+  }
+  bluetoothPlugin.write(function () {
+    console.log('End game written correctly!');
+  }, function (error) {
+    console.log('Error writing game end: ' + error);
+  }, bluetoothSocket, message);
+}
+
+
+
 
 //Global variables
 var bluetoothSocket = -1;
@@ -361,6 +509,9 @@ var gameName = '';
 var gameType = '';
 var gameLimit = '';
 
+var damageTaken = 0;
+
+var hitData = [];
 
 function handleItems (received_item) {
   switch(received_item.type) {
@@ -374,7 +525,7 @@ function handleItems (received_item) {
           handlePlayer(received_item);
           break;
     default:
-          console.log('It received an item that is not response, hit, or player.');
+          alert('Received an item that is not response, hit, or player.');
           break;
   }
 }
@@ -385,19 +536,19 @@ function handleResponse (received_item) {
           handleConnected(received_item);
           break;
     case 'start':
-          //Handle start.
+          handleStart(received_item);
           break;
     case 'new':
-          //New handle.
+          handleNew(received_item);
           break;
     case 'end':
-          //End handle.
+          handleEnd(received_item);
           break;
     case 'hitAcknowledged':
-          //hitAcknowledged
+          handleHitAcknowledged(received_item);
           break;
     case 'information':
-          //Information
+          handleInformation(received_item);
           break;
     default:
           alert('It received a response that is not in the list.');
@@ -412,12 +563,41 @@ function handleConnected (received_item) {
   }
 }
 
+function handleStart (received_item) {
+  gameState = received_item.response;
+}
+
+function handleNew (received_item) {
+  gameState = received_item.response;
+}
+
+function handleEnd (receive_item) {
+  gameState = received_item.response;
+}
+
 function handleHit (received_item) {
+  if(gameState === 'start'){
+    hitData.push(received_item);
+    handleHitData(received_item);
+  } else {
+    alert('Received hit but game isn\'t in running mode.');
+  }
+}
+
+function handleHitAcknowledged (received_item) {
+  //At this point we should erase received_item.hitNumber.
+  //To-do.
+}
+
+function handleInformation (received_item) {
+  //What do we do with this?
 
 }
 
 function handlePlayer (received_item) {
-
+  //You set your score to whatever is here.
+  var text = _.template('<p>Shots fired = <%= shots %> </p>');
+  $('#block_a_game_running').append(text(received_item.shotsFired));
 }
 
 
