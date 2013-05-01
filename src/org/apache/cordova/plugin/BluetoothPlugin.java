@@ -179,8 +179,8 @@ public class BluetoothPlugin extends CordovaPlugin {
 		else if ( ACTION_ENABLE.equals(action) )
 		{
 			this.callback_enable = callbackContext;
-			PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
-			pluginResult.setKeepCallback(true);
+			
+			PluginResult pluginResult;
 		
 			if ( ! m_bluetoothAdapter.isEnabled() )  {
 					
@@ -188,7 +188,13 @@ public class BluetoothPlugin extends CordovaPlugin {
 				//But I inform the users, and the commented out thing below was crashing.
 				m_bluetoothAdapter.enable();
 				
-			}			
+				pluginResult = new PluginResult(PluginResult.Status.OK);
+				pluginResult.setKeepCallback(true);				
+				
+			} else {
+				pluginResult = new PluginResult(PluginResult.Status.ERROR);
+				pluginResult.setKeepCallback(true);
+			}
 				
 			/*
 			if ( ! m_bluetoothAdapter.isEnabled() )  {
@@ -196,9 +202,9 @@ public class BluetoothPlugin extends CordovaPlugin {
 						new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), 
 						this.REQUEST_CODE_ENABLE);
 			}
-			*/
+			*/	
 			callbackContext.sendPluginResult(pluginResult);
-			return true;
+			return true;	
 		}
 		else if ( ACTION_DISABLE.equals(action) )
 		{

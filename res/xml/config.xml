@@ -31,7 +31,7 @@
     <access origin=".*"/>
 
     <!-- <content src="http://mysite.com/myapp.html" /> for external pages -->
-    <content src="index.html" />
+    <content src="app/index.html" />
     
     <log level="DEBUG"/>
     <preference name="useBrowserHistory" value="true" />

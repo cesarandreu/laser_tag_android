@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html ng-app="LaserTag">
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
+    <title>TodoMobile</title>
+    <link rel="stylesheet" href="css/jquery-mobile.css"/>
+
+    <script src="javascript/cordova-2.6.0.js"></script>
+    <script src="javascript/Bluetooth.js"></script>
+    <script src="javascript/jquery.js"></script>
+    <script src="javascript/jquery-mobile.js"></script>
+    <script src="javascript/angular.js"></script>
+    <script src="javascript/jquery-mobile-angular-adapter.js"></script>
+    <script src="app.js"></script>
+
+</head>
+<body ng-controller="LaserTag">
+
+<div id="home" data-role="page">
+  <div data-role="header">
+    <h1>Bluetooth Setup</h1>
+  </div>
+
+  <div data-role="content">
+
+    <div data-role="controlgroup">
+      <button ng-click="bluetoothOn()">Turn BT on</button>
+      <button ng-click="bluetoothOff()">Turn BT off</button>
+      <button ng-click="bluetoothGetDevices()">BT Devices</button>
+    </div>
+
+    <br>
+
+    <div>
+      <ul data-role="listview">
+        <li data-role="list-divider">List of devices</li>
+        <li ng-repeat="device in devices">
+          <a ng-click="bluetoothConnect(device.address)">{{device.name}}</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<div id="newGame" data-role="page">
+  <div data-role="header">
+    <h1>New Game</h1>
+  </div>
+
+  <div data-role="content">
+    <div>
+      <p>Game status: {{gameState}}</p>
+    </div>
+
+    <div data-role="controlgroup">
+      <button ng-click="gameNew()">Create New Game</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="setupGame" data-role="page">
+  <div data-role="header">
+    <h1>Game Setup</h1>
+  </div>
+
+  <div data-role="content">
+
+    <p>Game status: {{gameState}}</p>
+
+    <form>
+
+      <!-- Game Type -->
+      <div data-role="fieldcontain">
+        <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+          <legend>Game Type</legend>
+
+          <input id="Deathmatch" name="GameType" value="A" type="radio" checked="checked" ng-model="game.type" ng-change="updateTypeText()">
+          <label for="Deathmatch">Deathmatch</label>
+
+          <input id="Timed_Deathmatch" name="GameType" value="B" type="radio" ng-model="game.type" ng-change="updateTypeText(game.type)">
+          <label for="Timed_Deathmatch">Timed Deathmatch</label>
+        </fieldset>
+      </div>
+
+      <!-- Game Limit -->
+      <div data-role="fieldcontain">
+        <label for="GameLimit">{{limitType}} Limit</label>
+        <input type="range" name="GameLimit" min="5" max="25" value="15" data-highlight="true" ng-model="game.limit">
+      </div>
+
+      <!-- Player Number -->
+      <div data-role="fieldcontain">
+        <label for="PlayerNumber">Player Number</label>
+        <input type="range" name="PlayerNumber" min="2" max="255" value="96" data-highlight="true" ng-model="game.playerNumber">
+      </div>
+
+      <!-- Enemy Number -->
+      <div data-role="fieldcontain">
+        <label for="EnemyNumber">Enemy Number</label>
+        <input type="range" name="EnemyNumber" min="2" max="255" value="164" data-highlight="true" ng-model="game.selectedEnemyNumber">
+
+        <a data-role="button" ng-click="addEnemy(game.selectedEnemyNumber)">Add enemy</a>
+      </div>
+
+      <!--
+      <div>Game Info = {{game | json}}</div>
+      -->
+    <div data-role="fieldcontain">
+        <a data-role="button" ng-click="gameInformation()">Send information</a>
+        <!--<a data-role="button" ng-click="gameStart()">Game start</a>-->
+    </div>
+    </form>
+
+
+
+  </div>
+</div>
+
+<div id="startScreen" data-role="page">
+  <div data-role="header">
+    <h1>Start Screen</h1>
+  </div>
+
+  <div data-role="content">
+    
+    <p>Game Status: {{gameState}}</p>
+
+    <!-- Game Data Table -->
+    <div>
+      <table data-role="table" data-mode="reflow" class="ui-response table-stroke">
+        <thead>
+          <tr>
+            <th data-priority="1">Game Type</th>
+            <th data-priority="2">Game Limit</th>
+            <th data-priority="3">Player Number</th>
+            <th data-priority="4">Enemy Count</th>
+            <th data-priority="5">Enemy Numbers</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{game.typeText}}</td>
+            <td>{{game.limit}} {{limitName}}</td>
+            <td>{{game.playerNumber}}</td>
+            <td>{{game.enemyList.length}}</td>
+            <td>{{game.enemyList}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div data-role="controlgroup">
+      <a data-role="button" ng-click="gameStart()">Start Game!</a>
+    </div>
+  </div>
+
+</div>
+
+
+<div id="runningGame" data-role="page">
+  <div data-role="header">
+    <h1>Game Running</h1>
+  </div>
+
+  <div data-role="content">
+    <p>Game Status: {{gameState}}</p>
+    <p>Game Info: {{ game | json }}</p>
+    <p>Shots fired: {{ shotsFired }}</p>
+    <p>Hits: {{ hits | json }}</p>
+
+    <div data-role="fieldcontain">
+      <div data-role="controlgroup">
+        <a data-role="button" ng-click="gameEnd()">End Game</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="endGame" data-role="page">
+  <div data-role="header">
+    <h1>Game End</h1>
+  </div>
+
+  <div data-role="content">
+    <p>Game Status: {{gameState}}</p>
+    <p>Game Info: {{ game | json }}</p>
+    <p>Shots fired: {{ shotsFired }}</p>
+    <p>Hits: {{ hits | json }}</p>
+
+    <br>
+
+    <div data-role="fieldcontain">
+      <div data-role="controlgroup">
+        <a data-role="button" ng-click="gameReset()">New Game</a>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<!-- Login Page -->
+  <!--
+<div id="login" data-role="page" ng-controller="MainCtrl">
+  <div data-role="header">
+    <h1>Laser Tag Reloaded</h1>
+  </div>
+
+  <div data-role="content">
+    <form ng-submit="submit()">
+      <input type="text" id="login_username" ng-model="username" placeholder="Username">
+      <input type="password" id="login_password" placeholder="Password" disabled>
+      <input type="submit" id="login_button" value="Login" href='bluetooth_list'>
+    </form>
+  </div>
+  
+
+</div>
+-->
+<!-- Login Page End -->
+
+<!-- Bluetooth Devices Page -->
+<!--
+<div id="bluetooth_list" data-role="page" >
+  <div data-role="header">
+    <h1>Bluetooth</h1>
+  </div>
+
+  <div data-role="content" ng-controller="bluetoothSelect">
+    <div>
+      <h3>Instructions</h3>
+      <p>Please make sure the blueooth is turned on. Then press the button below to search for devices. Once it has finished, select your device.</p>
+    </div>
+  </div>
+
+</div>
+-->
+<!-- Bluetooth Devices Page End -->
+
+
+
+</body>
+</html>

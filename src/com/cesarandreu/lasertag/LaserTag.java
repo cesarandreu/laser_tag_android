@@ -29,9 +29,10 @@ public class LaserTag extends DroidGap
     {
         super.onCreate(savedInstanceState);
         // Set by <content src="index.html" /> in config.xml
-        super.loadUrl(Config.getStartUrl());
-        //super.loadUrl("file:///android_asset/www/index.html")
-    }
-}
+        //super.loadUrl(Config.getStartUrl());
+        super.loadUrl("file:///android_asset/app/index.html");
+    }	
+    		
+}	
 
-
+			

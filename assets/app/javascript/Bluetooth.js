@@ -299,7 +299,7 @@ cordova.define("cordova/plugin/bluetooth", function(require, exports, module) {
    * bufferSize : internal buffer size while reading, default is 1024
    */
   Bluetooth.prototype.read = function(successCallback,failureCallback,socketId,bufferSize) {
-	  bufferSize = typeof bufferSize !== 'undefined' ? bufferSize : 1024;
+    bufferSize = typeof bufferSize !== 'undefined' ? bufferSize : 1024;
       return exec(successCallback, failureCallback, 'BluetoothPlugin', 'read', [socketId,bufferSize]);
   };
 
