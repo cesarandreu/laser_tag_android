@@ -1,6 +1,8 @@
 
 var app = angular.module('LaserTag', []);
 
+
+//PhoneGap factory
 app.factory('phonegapReady', function ($rootScope) {
 
     $rootScope.safeApply = function(fn) {
@@ -34,9 +36,7 @@ app.factory('phonegapReady', function ($rootScope) {
     };
   });
 
-
-
-
+//Bluetooth factory
 app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
   var bluetoothPlugin = cordova.require('cordova/plugin/bluetooth');
@@ -146,7 +146,7 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
         }
       }, address, uuid, true);
     }),
-    read: phonegapReady(function (onSuccess, onError, socket) {
+    read: phonegapReady(function (onSuccess, onError, socketParam) {
       bluetoothPlugin.read(function () {
         var that = this,
           args = arguments;
@@ -165,9 +165,9 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
             onError.apply(that, args);
           });
         }
-      }, socket);
+      }, socketParam);
     }),
-    write: phonegapReady(function (onSuccess, onError, socket, message) {
+    write: phonegapReady(function (onSuccess, onError, socketParam, message) {
       bluetoothPlugin.write(function () {
         var that = this,
           args = arguments;
@@ -186,14 +186,39 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
             onError.apply(that, args);
           });
         }
-      }, socket, message);
+      }, socketParam, message);
     })
   };
 });
 
+//Socket.IO factory
+app.factory('socket', function ($rootScope) {
+  var socket = io.connect('http://192.168.1.106:3000/');
+  return {
+    on: function (eventName, callback) {
+      socket.on(eventName, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          callback.apply(socket, args);
+        });
+      });
+    },
+    emit: function (eventName, data, callback) {
+      socket.emit(eventName, data, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          if (callback) {
+            callback.apply(socket, args);
+          }
+        });
+      });
+    }
+  };
+});
 
-app.controller('LaserTag', function ($scope, bluetooth) {
-    var socket = -1;
+//LaserTag MEGA controller
+app.controller('LaserTag', function ($scope, bluetooth, socket) {
+    var bluetoothSocket = -1;
     var uuid = '';
     var address = '';
     $scope.devices = [{name: 'No devices', address: ''}];
@@ -265,13 +290,13 @@ app.controller('LaserTag', function ($scope, bluetooth) {
           uuid = UUIDs[0];
           bluetooth.connect(function (sock) {
             //alert('Connected!  Socket is: ' + socket + ', Sock is: ' + sock);
-            socket = sock;
+            bluetoothSocket = sock;
 
             //Sets up the reader.
-            ReadHandler(bluetooth, socket);
+            ReadHandler(bluetooth, bluetoothSocket);
 
             //After connecting it moves on to the configuration page
-            WriteConnect(bluetooth, socket);
+            WriteConnect(bluetooth, bluetoothSocket);
           }, function (error) {
             alert('Error connecting: ' + error);
           }, address, uuid);
@@ -376,7 +401,7 @@ app.controller('LaserTag', function ($scope, bluetooth) {
     //When the message is hit information
     function handleHit (message) {
       $scope.hits.push({enemy: message.id, hitNumber: message.hitNumber, location: message.gps});
-      WriteAcknowledge(bluetooth, socket, message.hitNumber);
+      WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
     }
 
     //When the message is player information
@@ -388,22 +413,22 @@ app.controller('LaserTag', function ($scope, bluetooth) {
 
     //Starts a new game
     $scope.gameNew = function () {
-      WriteNew(bluetooth, socket);
+      WriteNew(bluetooth, bluetoothSocket);
     };
 
     //Sends game information 
     $scope.gameInformation = function () {
-      WriteInformation(bluetooth, socket, $scope.game.playerNumber, $scope.game.type, $scope.game.limit, $scope.game.enemyList);
+      WriteInformation(bluetooth, bluetoothSocket, $scope.game.playerNumber, $scope.game.type, $scope.game.limit, $scope.game.enemyList);
     };
 
     //Starts a game
     $scope.gameStart = function () {
-        WriteStart(bluetooth, socket);
+        WriteStart(bluetooth, bluetoothSocket);
     };
 
     //Ends the game
     $scope.gameEnd = function () {
-      WriteEnd(bluetooth, socket);
+      WriteEnd(bluetooth, bluetoothSocket);
     };
 
     //Resets the variables and starts a new game
@@ -434,9 +459,7 @@ app.controller('LaserTag', function ($scope, bluetooth) {
       //Resets shots fired to zero
       $scope.shotsFired = 0;
 
-
     };
-
 
   //Write Functions
 
@@ -566,6 +589,112 @@ app.controller('LaserTag', function ($scope, bluetooth) {
 
     };
 
+  //Socket.IO Magic here
+
+    //Socket.IO variables
+    $scope.newName = '';
+
+    //All other users that are not the player
+    $scope.users = [];
+
+    //Player information
+    $scope.player = {};
+    $scope.player.name = '';
+    $scope.player.channel = '';
+
+    socket.on('init', function (data) {
+      $scope.player.name = data.name;
+      $scope.users = data.users;
+    });
+
+    socket.on('user:join', function (data) {
+      $scope.users.push(data.name);
+    });
+
+    socket.on('user:left', function (data) {
+      var i, user;
+      for (i = 0; i < $scope.users.length; i++) {
+        user = $scope.users[i];
+        if (user === data.name) {
+          $scope.users.splice(i, 1);
+          break;
+        }
+      }
+    });
+
+    //Updates the person's username
+    socket.on('change:name', function (data) {
+      changeName(data.oldName, data.newName);
+    });
+
+    //Private helper
+    var changeName = function (oldName, newName) {
+      // rename user in list of users
+      var i;
+      for (i = 0; i < $scope.users.length; i++) {
+        if ($scope.users[i] === oldName) {
+          $scope.users[i] = newName;
+        }
+      }
+    };
+
+    //Changes the user's name
+    $scope.changeName = function () {
+      socket.emit('change:name', {
+        name: $scope.newName
+      }, function (result) {
+        if (!result) {
+          alert('That name is already taken! Try another.');
+        } else {
+
+          changeName($scope.player.name, $scope.newName);
+
+          $scope.player.name = $scope.newName;
+          $scope.newName = '';
+
+          $.mobile.changePage('#bluetooth');
+
+        }
+      });
+    };
+
+
+    //Socket.IO Lobby
+    $scope.createRoom = function () {
+      //socket.emit('room:create', {name: })
+    };
+
+
+  //Lobby logic
+
+    //Changes the user's name on submit
+    $scope.submitButton = function(name) {
+      $scope.newName = name;
+      $scope.changeName();
+    };
+
+
+
+
+
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

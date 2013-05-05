@@ -2,13 +2,14 @@
 <html ng-app="LaserTag">
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
-    <title>TodoMobile</title>
+    <title>Laser Tag Reloaded</title>
     <link rel="stylesheet" href="css/jquery-mobile.css"/>
 
     <script src="javascript/cordova-2.6.0.js"></script>
     <script src="javascript/Bluetooth.js"></script>
     <script src="javascript/jquery.js"></script>
     <script src="javascript/jquery-mobile.js"></script>
+    <script src="http://192.168.1.106:3000/socket.io/socket.io.js"></script>
     <script src="javascript/angular.js"></script>
     <script src="javascript/jquery-mobile-angular-adapter.js"></script>
     <script src="app.js"></script>
@@ -16,7 +17,29 @@
 </head>
 <body ng-controller="LaserTag">
 
-<div id="home" data-role="page">
+<div id="login" data-role="page">
+  <div data-role="header">
+    <h1>Login</h1>
+  </div>
+
+  <div data-role="content">
+
+    <div data-role="fieldcontain">
+      <label for="username">Username</label>
+      <input type="text" name="username" id="username" value="" ng-model="newName">
+
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" value="" disabled="disabled">
+    </div>
+
+    <div data-role="fieldcontain">
+      <a data-role="button" ng-click="submitButton(newName)">Submit</a>
+    </div>
+  </div>
+
+</div>
+
+<div id="bluetooth" data-role="page">
   <div data-role="header">
     <h1>Bluetooth Setup</h1>
   </div>
@@ -24,16 +47,16 @@
   <div data-role="content">
 
     <div data-role="controlgroup">
-      <button ng-click="bluetoothOn()">Turn BT on</button>
-      <button ng-click="bluetoothOff()">Turn BT off</button>
-      <button ng-click="bluetoothGetDevices()">BT Devices</button>
+      <button ng-click="bluetoothOn()">Enable Bluetooth</button>
+      <button ng-click="bluetoothOff()">Disable Bluetooth</button>
+      <button ng-click="bluetoothGetDevices()">Get paired devices</button>
     </div>
 
     <br>
 
     <div>
       <ul data-role="listview">
-        <li data-role="list-divider">List of devices</li>
+        <li data-role="list-divider">List of paired devices</li>
         <li ng-repeat="device in devices">
           <a ng-click="bluetoothConnect(device.address)">{{device.name}}</a>
         </li>
@@ -41,6 +64,29 @@
     </div>
   </div>
 
+</div>
+
+<div id="main" data-role="page">
+  <div data-role="header">
+    <h1>Main Menu</h1>
+  </div>
+
+  <div data-role="content">
+    <div data-role="controlgroup">
+      <a data-role="button" href="#create">Create game</a>
+      <a data-role="button" ng-click="joinRoom()">Join game</a>
+    </div>
+  </div>
+
+</div>
+
+<div id="create" data-role="page">
+  <div data-role="header">
+    <h1>Create Game</h1>
+  </div>
+
+  
+  
 </div>
 
 <div id="newGame" data-role="page">
