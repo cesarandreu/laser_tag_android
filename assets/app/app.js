@@ -231,12 +231,12 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     $scope.game.type = 'A';
     $scope.game.typeText = 'Deathmatch';
     $scope.game.limit = 15;
-    $scope.game.playerNumber = 96;
+    //$scope.game.playerNumber = 96;
 
-    $scope.game.enemyList = [];
+    //$scope.game.enemyList = [];
 
     //Default EnemyNumber
-    $scope.game.selectedEnemyNumber = 32;
+    //$scope.game.selectedEnemyNumber = 32;
 
     //Hits received
     $scope.hits = [];
@@ -245,8 +245,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     $scope.shotsFired = 0;
 
     //Limit name and type
-    $scope.limitName = 'kills';
-    $scope.limitType = 'Kill';
+    $scope.game.limitName = 'kills';
+    $scope.game.limitType = 'Kill';
 
   //Bluetooth Control Function
 
@@ -365,13 +365,14 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     //When the response is 'connected'
     function handleConnected (message) {
       $scope.gameState = 'Connected';
-      $.mobile.changePage('#newGame');
+      $.mobile.changePage('#main');
     }
 
     //When the response is 'new'
     function handleNew (message) {
       $scope.gameState = 'Awaiting game info';
-      $.mobile.changePage('#setupGame');
+      alert('Game state is: ' + $scope.gameState);
+      //$.mobile.changePage('#setupGame');
     }
 
     //When the response is 'information'
@@ -434,24 +435,26 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     //Resets the variables and starts a new game
     $scope.gameReset = function () {
       //Starts a new game
-      $scope.gameNew();
+      //$scope.gameNew();
 
       //Sets game as an empty object
       $scope.game = {};
 
+      $scope.game.name = '';
+
       //Default game values
       $scope.game.type = 'A';
       $scope.game.limit = 15;
-      $scope.game.playerNumber = 96;
-      $scope.game.enemyList = [];
+      //$scope.game.playerNumber = 96;
+      //$scope.game.enemyList = [];
 
       //Limit name and type
-      $scope.limitName = 'kills';
-      $scope.limitType = 'Kill';
+      $scope.game.limitName = 'kills';
+      $scope.game.limitType = 'Kill';
       $scope.game.typeText = 'Deathmatch';
 
       //Default selected enemy number
-      $scope.game.selectedEnemyNumber = 32;
+      //$scope.game.selectedEnemyNumber = 32;
 
       //Resets hits received to none
       $scope.hits = [];
@@ -579,12 +582,12 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
       //$scope.limitName = 'kills';
       if($scope.game.type==='A'){
         $scope.game.typeText = 'Deathmatch';
-        $scope.limitName = 'kills';
-        $scope.limitType = 'Kill';
+        $scope.game.limitName = 'kills';
+        $scope.game.limitType = 'Kill';
       } else {
         $scope.game.typeText = 'Timed Deathmatch';
-        $scope.limitName = 'minutes';
-        $scope.limitType = 'Time';
+        $scope.game.limitName = 'minutes';
+        $scope.game.limitType = 'Time';
       }
 
     };
@@ -660,22 +663,112 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
 
 
     //Socket.IO Lobby
-    $scope.createRoom = function () {
-      //socket.emit('room:create', {name: })
+
+    //Creates a room
+    $scope.createRoom = function (game) {
+      socket.emit('lobby:create', {
+        name: game.name,
+        type: game.type,
+        limit: game.limit,
+        host: game.host,
+        typeText: game.typeText,
+        limitType: game.limitType
+      }, function (result, playerList) {
+        if(!result){
+          alert('That room name is already taken! Try another.');
+        } else {
+          $scope.gameNew();
+          $scope.lobby = playerList;
+          $.mobile.changePage('#hostLobby');
+        }
+      });
     };
+
+    //Gets the game list
+    $scope.getGameList = function () {
+      socket.emit('lobby:getList', {list: true}, function (gameList) {
+        if (gameList.length===0) {
+          $scope.gameList = ['No games found'];
+        } else {
+          $scope.gameList = gameList;
+        }
+
+      });
+    };
+
+    //Refreshes the game list
+    $scope.refreshGameList = function () {
+      $scope.getGameList();
+    };
+
+    //Tells the user the host left the lobby, forces the person out.
+    socket.on('lobby:abandon', function() {
+      $scope.gameReset();
+      //Should do something fancier later.
+      alert('Host has left the lobby.');
+      $.mobile.changePage('#main');
+    });
+
+    //When there is a playerChange in the lobby, update the playerList.
+    socket.on('lobby:playerChange', function (playerList) {
+      $scope.lobby = playerList;
+    });
 
 
   //Lobby logic
+    $scope.lobby = [];
+    $scope.gameList = ['No games found'];
 
-    //Changes the user's name on submit
+    //Changes the user's name on submit, this is the login page.
     $scope.submitButton = function(name) {
       $scope.newName = name;
       $scope.changeName();
     };
 
+    //Creates a game
+    $scope.createGame = function (game) {
+      $scope.game = game;
+      $scope.game.host = $scope.player.name;
+      $scope.createRoom(game);
+    };
 
+    //When the host leaves do this
+    $scope.hostLeave = function (roomName) {
+      socket.emit('lobby:hostLeft', roomName);
+      $scope.gameReset();
+    };
 
+    //When a player leaves do this
+    $scope.leaveLobby = function () {
+      $scope.gameReset();
+      socket.emit('lobby:leave');
+    };
 
+    $scope.joinGame = function (roomName) {
+      if (roomName == 'No games found') {
+        alert('Try refreshing the list and joining another room!');
+      } else {
+        socket.emit('lobby:join', roomName, function (gameInfo) {
+          if (!gameInfo.name) {
+            alert('Something failed! Try refreshing the list and joining another room.');
+          } else {
+            $scope.game = {
+              started: false,
+              name: gameInfo.name,
+              type: gameInfo.type,
+              limit: gameInfo.limit,
+              host: gameInfo.host,
+              typeText: gameInfo.typeText,
+              limitType: gameInfo.limitType
+            };
+
+            $scope.lobby = gameInfo.players;
+            $.mobile.changePage('#joinLobby');
+          }
+        });
+      }
+
+    };
 
 
 });
