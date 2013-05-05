@@ -144,7 +144,7 @@
     </ul>
 
     <div data-role="fieldcontain">
-      <a data-role="button" ng-click="sendInformation(game, lobby)">Begin Game</a>
+      <a data-role="button" ng-click="sendInformation(game, lobby)">Ready</a>
     </div>
 
   </div>
@@ -183,7 +183,7 @@
     <ul data-role="listview">
       <li data-role="list-divider">Player list</li>
       <li ng-repeat="player in lobby">
-        Name: {{player.name}}  Number: {{player.number}} 
+        Name: {{player.name}} - Number: {{player.number}} 
       </li>
     </ul>
 
@@ -191,7 +191,44 @@
 
 </div>
 
+<div id="gameReady" data-role="page">
+  <div data-role="header">
+    <h1>Start screen</h1>
+  </div>
 
+  <div data-role="content">
+
+    <p>Game type: {{game.typeText}}</p>
+    <p>{{game.limitType}} limit: {{game.limit}}</p>
+
+    <ul data-role="listview">
+      <li data-role="list-divider">Player list</li>
+      <li ng-repeat="player in lobby">
+        Name: {{player.name}} {{player.ready}} 
+      </li>
+    </ul>
+
+    <div data-role="fieldcontain">
+      <a data-role="button" ng-click="startGame()" href="#gameStart">Start Game</a>
+    </div>
+  </div>
+
+</div>
+
+
+<div id="gameRunning" data-role="page">
+  <div data-role="header">
+    <h1>Game Live!</h1>
+  </div>
+
+  <div>
+
+  </div>
+
+</div>
+
+
+<!--
 <div id="startScreen" data-role="page">
   <div data-role="header">
     <h1>Start Screen</h1>
@@ -201,7 +238,6 @@
     
     <p>Game Status: {{gameState}}</p>
 
-    <!-- Game Data Table -->
     <div>
       <table data-role="table" data-mode="reflow" class="ui-response table-stroke">
         <thead>
@@ -231,8 +267,9 @@
   </div>
 
 </div>
+-->
 
-
+<!--
 <div id="runningGame" data-role="page">
   <div data-role="header">
     <h1>Game Running</h1>
@@ -275,6 +312,7 @@
 
 
 </div>
+-->
 
 <!-- Login Page -->
   <!--

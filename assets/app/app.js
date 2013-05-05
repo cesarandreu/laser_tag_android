@@ -365,6 +365,7 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     //When the response is 'connected'
     function handleConnected (message) {
       $scope.gameState = 'Connected';
+      alert('Game state is: ' + $scope.gameState);
       $.mobile.changePage('#main');
     }
 
@@ -378,19 +379,23 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     //When the response is 'information'
     function handleInformation (message) {
       $scope.gameState = 'Game ready to start';
-      $.mobile.changePage('#startScreen');
+      alert('Game state is: ' + $scope.gameState);
+
+      //Sets self ready in the server
+      setSelfReady();
+
     }
 
     //When the response is 'start'
     function handleStart (message) {
       $scope.gameState = 'Game running';
-      $.mobile.changePage('#runningGame');
+      //$.mobile.changePage('#runningGame');
     }
 
     //When the response is 'end'
     function handleEnd (message) {
       $scope.gameState = 'Game ended';
-      $.mobile.changePage('#endGame');
+      //$.mobile.changePage('#endGame');
     }
 
     //When the response is 'hitAcknowledge'
@@ -418,8 +423,9 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     };
 
     //Sends game information 
-    $scope.gameInformation = function () {
-      WriteInformation(bluetooth, bluetoothSocket, $scope.game.playerNumber, $scope.game.type, $scope.game.limit, $scope.game.enemyList);
+    $scope.gameInformation = function (playerNumber, gameType, gameLimit, enemyList) {
+      //WriteInformation(bluetooth, bluetoothSocket, $scope.game.playerNumber, $scope.game.type, $scope.game.limit, $scope.game.enemyList);
+      WriteInformation(bluetooth, bluetoothSocket, playerNumber, gameType, gameLimit, enemyList);
     };
 
     //Starts a game
@@ -769,6 +775,39 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
       }
 
     };
+
+    //Sends information to phone.
+    $scope.sendInformation = function (game, lobby) {
+      $.mobile.changePage('#gameReady');
+      //socket.emit('lobby:informationReady');
+    };
+
+    socket.on('lobby:sendInformation', function() {
+      $.mobile.changePage('#gameReady');
+      var enemyArray = [];
+
+      for (var i=0; i<$scope.lobby.length; i++) {
+        if ($scope.player.name == $scope.lobby[i].name) {
+          $scope.player.number = $scope.lobby[i].number;
+        } else {
+          enemyArray.push($scope.lobby[i].number);
+        }
+      }
+
+      $scope.gameInformation($scope.player.number, $scope.game.type, $scope.game.limit, enemyArray);
+
+    });
+
+    function setSelfReady () {
+      socket.emit('lobby:setReady');
+    }
+
+  //Handles game logic
+
+    $scope.startGame = function () {
+
+    };
+
 
 
 });
