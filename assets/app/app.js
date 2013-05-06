@@ -389,12 +389,16 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     //When the response is 'start'
     function handleStart (message) {
       $scope.gameState = 'Game running';
+      alert('Game state is: ' + $scope.gameState);
+
       //$.mobile.changePage('#runningGame');
     }
 
     //When the response is 'end'
     function handleEnd (message) {
       $scope.gameState = 'Game ended';
+      alert('Game state is: ' + $scope.gameState);
+
       //$.mobile.changePage('#endGame');
     }
 
@@ -408,6 +412,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     function handleHit (message) {
       $scope.hits.push({enemy: message.id, hitNumber: message.hitNumber, location: message.gps});
       WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
+      message.receiver = $scope.player.number;
+      transmitHitData(message);
     }
 
     //When the message is player information
@@ -778,12 +784,15 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
 
     //Sends information to phone.
     $scope.sendInformation = function (game, lobby) {
-      $.mobile.changePage('#gameReady');
-      //socket.emit('lobby:informationReady');
+      $.mobile.changePage('#gameReadyHost');
+      socket.emit('lobby:informationReady');
     };
 
     socket.on('lobby:sendInformation', function() {
-      $.mobile.changePage('#gameReady');
+      if ($scope.game.host != $scope.player.name) {
+        $.mobile.changePage('#gameReady');
+      }
+
       var enemyArray = [];
 
       for (var i=0; i<$scope.lobby.length; i++) {
@@ -803,12 +812,41 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     }
 
   //Handles game logic
+    $scope.scoreList = [];
 
     $scope.startGame = function () {
-
+      socket.emit('game:sendStart', {game: $scope.game, players: $scope.lobby});
     };
 
+    socket.on('game:start', function () {
+      $scope.gameStart();
 
+      $scope.scoreList = [];
+
+      for (var i = 0; i < $scope.lobby.length; i++) {
+          $scope.scoreList.push({name: $scope.lobby[i].name, score: 0});
+      }
+
+      $.mobile.changePage('#gameRunning');
+
+    });
+
+    socket.on('game:score', function (playerList) {
+      $scope.scoreList = playerList;
+    });
+
+    function transmitHitData (hitData) {
+      socket.emit('game:hit', {hitData: hitData, limit:$scope.game.limit, type:$scope.game.type});
+    }
+
+    socket.on('game:over', function(winner) {
+      $scope.gameEnd();
+      $scope.winner = winner;
+      //alert(winner.name + ' is the winner with ' + winner.score + ' points!');
+      $.mobile.changePage('#gameEnd');
+    });
+
+    $scope.winner = {name: '', score: 0};
 
 });
 

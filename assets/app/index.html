@@ -111,7 +111,7 @@
       <!-- Game Limit -->
       <div data-role="fieldcontain">
         <label for="GameLimit">{{game.limitType}} Limit</label>
-        <input type="range" name="GameLimit" min="5" max="25" value="15" data-highlight="true" ng-model="game.limit">
+        <input type="range" name="GameLimit" min="1" max="25" value="15" data-highlight="true" ng-model="game.limit">
       </div>
 
       <!--<div>Game Info = {{game | json}}</div>-->
@@ -191,7 +191,7 @@
 
 </div>
 
-<div id="gameReady" data-role="page">
+<div id="gameReadyHost" data-role="page">
   <div data-role="header">
     <h1>Start screen</h1>
   </div>
@@ -215,18 +215,72 @@
 
 </div>
 
+<div id="gameReady" data-role="page">
+  <div data-role="header">
+    <h1>Start screen</h1>
+  </div>
+
+  <div data-role="content">
+
+    <p>Game type: {{game.typeText}}</p>
+    <p>{{game.limitType}} limit: {{game.limit}}</p>
+
+    <ul data-role="listview">
+      <li data-role="list-divider">Player list</li>
+      <li ng-repeat="player in lobby">
+        Name: {{player.name}} {{player.ready}} 
+      </li>
+    </ul>
+
+  </div>
+
+</div>
+
 
 <div id="gameRunning" data-role="page">
   <div data-role="header">
     <h1>Game Live!</h1>
   </div>
 
-  <div>
+  <div data-role="content">
+    <p>Hits received: {{hits.length}}</p>
+    <p>Shots fired: {{shotsFired}}</p>
+
+    <ul data-role="listview">
+      <li data-role="list-divider">Player list</li>
+      <li ng-repeat="player in scoreList">
+        Name: {{player.name}}, Score: {{player.score}}
+      </li>
+    </ul>
 
   </div>
 
 </div>
 
+
+<div id="gameEnd" data-role="page">
+  <div data-role="header">
+    <h1>Game over</h1>
+  </div>
+
+  <div data-role="content">
+
+    <p>Shots fired: {{shotsFired}}</p>
+    <p>{{winner.name}} is the winner with {{winner.score}} points!</p>
+
+    <ul data-role="listview">
+      <li data-role="list-divider">Player list</li>
+      <li ng-repeat="player in scoreList">
+        Name: {{player.name}}, Score: {{player.score}}
+      </li>
+    </ul>
+
+    <div data-role="fieldcontain">
+      <a data-role="button" href="#main" ng-click="leaveLobby()">Main menu</a>
+    </div>
+
+  </div>
+</div>
 
 <!--
 <div id="startScreen" data-role="page">
