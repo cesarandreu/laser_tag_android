@@ -777,6 +777,7 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
             };
 
             $scope.lobby = gameInfo.players;
+            $scope.gameNew();
             $.mobile.changePage('#joinLobby');
           }
         });
@@ -834,6 +835,7 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     });
 
     socket.on('game:score', function (playerList) {
+      console.log(playerList);
       $scope.scoreList = playerList;
     });
 

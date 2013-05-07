@@ -21,7 +21,7 @@ package com.cesarandreu.lasertag;
 
 import android.os.Bundle;
 import org.apache.cordova.*;
-
+			
 public class LaserTag extends DroidGap
 {
     @Override
@@ -35,4 +35,4 @@ public class LaserTag extends DroidGap
     		
 }	
 	
-												
+													
