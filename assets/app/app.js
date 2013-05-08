@@ -36,6 +36,7 @@ app.factory('phonegapReady', function ($rootScope) {
     };
   });
 
+//Events factory
 app.factory('events', function($rootScope, phonegapReady) {
   return {
     offline: phonegapReady(function(callback) {
@@ -235,8 +236,8 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
       alert('Phone is offline! All hell will break lose. PANIC.');
     });
 
-    events.backButton(function (event) {
-      events.preventDefault();
+    events.backButton(function (e) {
+      e.preventDefault();
       alert('Back button was pressed! This is also a no-no.');
     });
 
@@ -389,6 +390,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     function handleConnected (message) {
       $scope.gameState = 'Connected';
       alert('Game state is: ' + $scope.gameState);
+      $scope.state = 'CONNECT';
       //$.mobile.changePage('#main');
       $location.hash('main');
     }
@@ -397,6 +399,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     function handleNew (message) {
       $scope.gameState = 'Awaiting game info';
       alert('Game state is: ' + $scope.gameState);
+      $scope.state = 'GAME_NEW';
       //$.mobile.changePage('#setupGame');
     }
 
@@ -404,7 +407,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     function handleInformation (message) {
       $scope.gameState = 'Game ready to start';
       alert('Game state is: ' + $scope.gameState);
-
+      $scope.state = 'GAME_INFORMATION';
       //Sets self ready in the server
       setSelfReady();
 
@@ -414,7 +417,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     function handleStart (message) {
       $scope.gameState = 'Game running';
       alert('Game state is: ' + $scope.gameState);
-
+      $scope.state = 'GAME_START';
       //$.mobile.changePage('#runningGame');
     }
 
@@ -434,10 +437,16 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
 
     //When the message is hit information
     function handleHit (message) {
-      $scope.hits.push({enemy: message.id, hitNumber: message.hitNumber, location: message.gps});
-      WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
-      message.receiver = $scope.player.number;
-      transmitHitData(message);
+      if (message.hitNumber===0) {
+        console.log('Hit number is zero. Did nothing.');
+      } else if ($scope.state=='GAME_OVER'){
+        console.log('Game is over. Did nothing.');
+      } else {
+        $scope.hits.push({enemy: message.id, hitNumber: message.hitNumber, location: message.gps});
+        WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
+        message.receiver = $scope.player.number;
+        transmitHitData(message);
+      }
     }
 
     //When the message is player information
@@ -863,8 +872,12 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     });
 
     socket.on('game:score', function (playerList) {
-      console.log(playerList);
-      $scope.scoreList = playerList;
+      //console.log(playerList);
+      if ( playerList.length === 0 ) {
+        console.log('Player list has length zero.');
+      } else {
+        $scope.scoreList = playerList;
+      }
     });
 
     function transmitHitData (hitData) {
@@ -872,6 +885,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     }
 
     socket.on('game:over', function(winner) {
+      $scope.state = 'GAME_OVER';
       $scope.gameEnd();
       $scope.winner = winner;
       //alert(winner.name + ' is the winner with ' + winner.score + ' points!');
@@ -880,6 +894,16 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     });
 
     $scope.winner = {name: '', score: 0};
+    $scope.state = '';
+
+  //Map related stuff
+  /*
+    $scope.myMarkers = [];
+
+    $scope.addMarker = function($event) {
+
+    };
+  */
 
 });
 

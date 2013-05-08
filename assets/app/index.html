@@ -15,6 +15,8 @@
     <script src="javascript/jquery-mobile-angular-adapter.js"></script>
     <script src="app.js"></script>
 
+    <script src="http://maps.google.com/maps/api/js?sensor=true"></script>
+
 </head>
 <body ng-controller="LaserTag">
 
@@ -47,16 +49,15 @@
 
   <div data-role="content">
 
-    <div data-role="controlgroup">
-      <button ng-click="bluetoothOn()">Enable Bluetooth</button>
-      <button ng-click="bluetoothOff()">Disable Bluetooth</button>
-      <button ng-click="bluetoothGetDevices()">Get paired devices</button>
-    </div>
 
-    <br>
 
     <div>
       <ul data-role="listview">
+        <li data-role="list-divider">Options</li>
+        <li><a ng-click="bluetoothOn()">Enable Bluetooth</a></li>
+        <li><a ng-click="bluetoothOff()">Disable Bluetooth</a></li>
+        <li><a ng-click="bluetoothGetDevices()">Get paired devices</a></li>
+
         <li data-role="list-divider">List of paired devices</li>
         <li ng-repeat="device in devices">
           <a ng-click="bluetoothConnect(device.address)">{{device.name}}</a>
@@ -86,6 +87,7 @@
   <div data-role="header">
     <a href="#main" data-icon="arrow-l" ng-click="resetGame()">Back</a>
     <h1>Create Game</h1>
+    <a ng-click="createGame(game)" data-icon="arrow-r" data-iconpos="right">Create</a>
   </div>
 
   <div data-role="content">
@@ -117,10 +119,6 @@
 
       <!--<div>Game Info = {{game | json}}</div>-->
 
-    <div data-role="fieldcontain">
-        <a data-role="button" ng-click="createGame(game)">Create</a>
-    </div>
-
     </form>
   </div>
   
@@ -129,24 +127,25 @@
 
 <div id="hostLobby" data-role="page">
   <div data-role="header">
-    <a href="#main" data-icon="delete" ng-click="hostLeave(game.name)">Leave</a>
+    <a href="#main" data-icon="delete"ng-click="hostLeave(game.name)">Leave</a>
     <h1>{{game.name}}</h1>
+    <a data-icon="arrow-r" ng-click="sendInformation(game, lobby)"  data-iconpos="right">Ready</a>
   </div>
 
   <div data-role="content">
-    <p>Game type: {{game.typeText}}</p>
-    <p>{{game.limitType}} limit: {{game.limit}}</p>
 
     <ul data-role="listview">
+
+      <li data-role="list-divider">Information</li>
+      <li>Game type: {{game.typeText}}</li>
+      <li>{{game.limitType}} limit: {{game.limit}}</li>
+
       <li data-role="list-divider">Player list</li>
       <li ng-repeat="player in lobby">
-        Name: {{player.name}}  Number: {{player.number}} 
+        <h3>Name: {{player.name}}</h3>
+        <p>Number: {{player.number}}</p>
       </li>
     </ul>
-
-    <div data-role="fieldcontain">
-      <a data-role="button" ng-click="sendInformation(game, lobby)">Ready</a>
-    </div>
 
   </div>
 
@@ -178,13 +177,17 @@
   </div>
 
   <div data-role="content">
-    <p>Game type: {{game.typeText}}</p>
-    <p>{{game.limitType}} limit: {{game.limit}}</p>
 
     <ul data-role="listview">
+
+      <li data-role="list-divider">Information</li>
+      <li>Game type: {{game.typeText}}</li>
+      <li>{{game.limitType}} limit: {{game.limit}}</li>
+
       <li data-role="list-divider">Player list</li>
       <li ng-repeat="player in lobby">
-        Name: {{player.name}} - Number: {{player.number}} 
+        <h3>Name: {{player.name}}</h3>
+        <p>Number: {{player.number}}</p>
       </li>
     </ul>
 
@@ -195,23 +198,24 @@
 <div id="gameReadyHost" data-role="page">
   <div data-role="header">
     <h1>Start screen</h1>
+    <a data-icon="arrow-r" data-iconpos="right" ng-click="startGame()" href="#gameRunning" class="ui-btn-right">Start</a>
   </div>
 
   <div data-role="content">
 
-    <p>Game type: {{game.typeText}}</p>
-    <p>{{game.limitType}} limit: {{game.limit}}</p>
-
     <ul data-role="listview">
+
+      <li data-role="list-divider">Information</li>
+      <li>Game type: {{game.typeText}}</li>
+      <li>{{game.limitType}} limit: {{game.limit}}</li>
+
       <li data-role="list-divider">Player list</li>
       <li ng-repeat="player in lobby">
-        Name: {{player.name}} {{player.ready}} 
+        <h3>Name: {{player.name}}</h3>
+        <p><b>{{player.ready}}</b></p>
       </li>
     </ul>
 
-    <div data-role="fieldcontain">
-      <a data-role="button" ng-click="startGame()" href="#gameRunning">Start Game</a>
-    </div>
   </div>
 
 </div>
@@ -223,13 +227,16 @@
 
   <div data-role="content">
 
-    <p>Game type: {{game.typeText}}</p>
-    <p>{{game.limitType}} limit: {{game.limit}}</p>
-
     <ul data-role="listview">
+
+      <li data-role="list-divider">Information</li>
+      <li>Game type: {{game.typeText}}</li>
+      <li>{{game.limitType}} limit: {{game.limit}}</li>
+
       <li data-role="list-divider">Player list</li>
       <li ng-repeat="player in lobby">
-        Name: {{player.name}} {{player.ready}} 
+        <h3>Name: {{player.name}}</h3>
+        <p><b>{{player.ready}}</b></p>
       </li>
     </ul>
 
@@ -240,17 +247,21 @@
 
 <div id="gameRunning" data-role="page">
   <div data-role="header">
-    <h1>Game Live!</h1>
+    <h1>Game Live</h1>
   </div>
 
   <div data-role="content">
-    <p>Hits received: {{hits.length}}</p>
-    <p>Shots fired: {{shotsFired}}</p>
 
     <ul data-role="listview">
+
+      <li data-role="list-divider">Information</li>
+      <li>Hits received: {{hits.length}}</li>
+      <li>Shots fired: {{shotsFired}}</li>
+
       <li data-role="list-divider">Player list</li>
       <li ng-repeat="player in scoreList">
-        Name: {{player.name}}, Score: {{player.score}}
+        <h3>Name: {{player.name}}</h3>
+        <p><b>Score:</b> {{player.score}}</p>
       </li>
     </ul>
 
@@ -261,26 +272,44 @@
 
 <div id="gameEnd" data-role="page">
   <div data-role="header">
+    <a href="#main" data-icon="delete" ng-click="leaveLobby()">Main menu</a>
     <h1>Game over</h1>
   </div>
 
   <div data-role="content">
 
-    <p>Shots fired: {{shotsFired}}</p>
-    <p>{{winner.name}} is the winner with {{winner.score}} points!</p>
-
     <ul data-role="listview">
+
+      <li data-role="list-divider">Information</li>
+      <li>Shots fired: {{shotsFired}}</li>
+      <li>
+        <h3>Winner: {{winner.name}}</h3>
+        <p>Score: {{winner.score}}</p>
+      </li>
+      <li><a href="#mapPage">Hit map</a></li>
+
       <li data-role="list-divider">Player list</li>
       <li ng-repeat="player in scoreList">
-        Name: {{player.name}}, Score: {{player.score}}
+        <h3>{{player.name}}</h3>
+        <p>Score: {{player.score}}</p>
       </li>
+
     </ul>
 
-    <div data-role="fieldcontain">
-      <a data-role="button" href="#main" ng-click="leaveLobby()">Main menu</a>
-    </div>
+  </div>
+
+</div>
+
+<div id="mapPage" data-role="page">
+  <div data-role="header">
+    <a href="#gameEnd" data-icon="arrow-l">Back</a>
+    <h1>Player Map</h1>
+  </div>
+
+  <div data-role="content">
 
   </div>
+
 </div>
 
 <!--

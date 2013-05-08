@@ -74,7 +74,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 	private static final String ACTION_CANCEL_LISTENING =		"cancelListening";
 	private static final String ACTION_READ = 					"read";
 	private static final String ACTION_WRITE = 					"write";
-	
+		
 	// min api 15 {
 	private static final String ACTION_FETCHUUIDS = 			"fetchUUIDs";
 	private static String ACTION_UUID = "";
