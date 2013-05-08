@@ -36,6 +36,45 @@ app.factory('phonegapReady', function ($rootScope) {
     };
   });
 
+//Events factory
+app.factory('events', function ($rootScope, phonegapReady) {
+  return {
+    offline: phonegapReady(function(callback) {
+      document.addEventListener('offline', callback, false);
+    }),
+    backButton: phonegapReady(function(callback) {
+      document.addEventListener('backbutton', callback, false);
+    })
+  };
+});
+
+//GPS factory
+app.factory('GPS', function ($rootScope, phonegapReady) {
+  return {
+    watchPosition: phonegapReady(function (onSuccess, onError) {
+      navigator.geolocation.watchPosition(function () {
+        var that = this,
+            args = arguments;
+
+        if(onSuccess) {
+          $rootScope.safeApply(function () {
+            onSuccess.apply(that, args);
+          });
+        }
+      }, function () {
+        var that = this,
+            args = arguments;
+
+        if(onError){
+          $rootScope.safeApply(function () {
+            onError.apply(that, args);
+          });
+        }
+      }, {enableHighAccuracy: true});
+    })
+  };
+});
+
 //Bluetooth factory
 app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
@@ -193,9 +232,8 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
 //Socket.IO factory
 app.factory('socket', function ($rootScope) {
-  //var socket = io.connect('http://192.168.1.106:3000/');
+  var socket = io.connect('http://192.168.1.106:3000/');
   //var socket = io.connect('http://micro2.aws.af.cm/');
-  var socket = io.connect('http://micro2.aws.af.cm/');
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
@@ -219,7 +257,18 @@ app.factory('socket', function ($rootScope) {
 });
 
 //LaserTag MEGA controller
-app.controller('LaserTag', function ($scope, bluetooth, socket) {
+app.controller('LaserTag', function ($scope, $location, bluetooth, socket, events, GPS) {
+
+    events.offline(function () {
+      alert('Phone is offline! All hell will break lose. PANIC.');
+    });
+
+    events.backButton(function (e) {
+      e.preventDefault();
+      alert('Back button was pressed! This is also a no-no.');
+    });
+
+
     var bluetoothSocket = -1;
     var uuid = '';
     var address = '';
@@ -368,13 +417,16 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     function handleConnected (message) {
       $scope.gameState = 'Connected';
       alert('Game state is: ' + $scope.gameState);
-      $.mobile.changePage('#main');
+      $scope.state = 'CONNECT';
+      //$.mobile.changePage('#main');
+      $location.hash('main');
     }
 
     //When the response is 'new'
     function handleNew (message) {
       $scope.gameState = 'Awaiting game info';
       alert('Game state is: ' + $scope.gameState);
+      $scope.state = 'GAME_NEW';
       //$.mobile.changePage('#setupGame');
     }
 
@@ -382,7 +434,7 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     function handleInformation (message) {
       $scope.gameState = 'Game ready to start';
       alert('Game state is: ' + $scope.gameState);
-
+      $scope.state = 'GAME_INFORMATION';
       //Sets self ready in the server
       setSelfReady();
 
@@ -392,7 +444,7 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     function handleStart (message) {
       $scope.gameState = 'Game running';
       alert('Game state is: ' + $scope.gameState);
-
+      $scope.state = 'GAME_START';
       //$.mobile.changePage('#runningGame');
     }
 
@@ -412,10 +464,16 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
 
     //When the message is hit information
     function handleHit (message) {
-      $scope.hits.push({enemy: message.id, hitNumber: message.hitNumber, location: message.gps});
-      WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
-      message.receiver = $scope.player.number;
-      transmitHitData(message);
+      if (message.hitNumber===0) {
+        console.log('Hit number is zero. Did nothing.');
+      } else if ($scope.state=='GAME_OVER'){
+        console.log('Game is over. Did nothing.');
+      } else {
+        $scope.hits.push({enemy: message.id, hitNumber: message.hitNumber, location: message.gps, phone_gps: (new google.maps.LatLng($scope.latitude, $scope.longitude))});
+        WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
+        message.receiver = $scope.player.number;
+        transmitHitData(message);
+      }
     }
 
     //When the message is player information
@@ -669,8 +727,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
           $scope.player.name = $scope.newName;
           $scope.newName = '';
 
-          $.mobile.changePage('#bluetooth');
-
+          //$.mobile.changePage('#bluetooth');
+          $location.hash('bluetooth');
         }
       });
     };
@@ -693,7 +751,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
         } else {
           $scope.gameNew();
           $scope.lobby = playerList;
-          $.mobile.changePage('#hostLobby');
+          //$.mobile.changePage('#hostLobby');
+          $location.hash('hostLobby');
         }
       });
     };
@@ -720,7 +779,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
       $scope.gameReset();
       //Should do something fancier later.
       alert('Host has left the lobby.');
-      $.mobile.changePage('#main');
+      //$.mobile.changePage('#main');
+      $location.hash('main');
     });
 
     //When there is a playerChange in the lobby, update the playerList.
@@ -777,7 +837,9 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
             };
 
             $scope.lobby = gameInfo.players;
-            $.mobile.changePage('#joinLobby');
+            $scope.gameNew();
+            //$.mobile.changePage('#joinLobby');
+            $location.hash('joinLobby');
           }
         });
       }
@@ -786,13 +848,15 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
 
     //Sends information to phone.
     $scope.sendInformation = function (game, lobby) {
-      $.mobile.changePage('#gameReadyHost');
+      //$.mobile.changePage('#gameReadyHost');
+      $location.hash('gameReadyHost');
       socket.emit('lobby:informationReady');
     };
 
     socket.on('lobby:sendInformation', function() {
       if ($scope.game.host != $scope.player.name) {
-        $.mobile.changePage('#gameReady');
+        //$.mobile.changePage('#gameReady');
+        $location.hash('gameReady');
       }
 
       var enemyArray = [];
@@ -829,12 +893,18 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
           $scope.scoreList.push({name: $scope.lobby[i].name, score: 0});
       }
 
-      $.mobile.changePage('#gameRunning');
+      //$.mobile.changePage('#gameRunning');
+      $location.hash('gameRunning');
 
     });
 
     socket.on('game:score', function (playerList) {
-      $scope.scoreList = playerList;
+      //console.log(playerList);
+      if ( playerList.length === 0 ) {
+        console.log('Player list has length zero.');
+      } else {
+        $scope.scoreList = playerList;
+      }
     });
 
     function transmitHitData (hitData) {
@@ -842,13 +912,54 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     }
 
     socket.on('game:over', function(winner) {
+      $scope.state = 'GAME_OVER';
       $scope.gameEnd();
       $scope.winner = winner;
       //alert(winner.name + ' is the winner with ' + winner.score + ' points!');
-      $.mobile.changePage('#gameEnd');
+      //$.mobile.changePage('#gameEnd');
+      $location.hash('gameEnd');
     });
 
     $scope.winner = {name: '', score: 0};
+    $scope.state = '';
+
+  //Map related stuff
+    var location = GPS.watchPosition(function (position) {
+      //console.log('lat: ' + position.coords.latitude + ', lon: ' + position.coords.longitude + ', accuracy: ' + position.coords.accuracy);
+      $scope.latitude = position.coords.latitude;
+      $scope.longitude = position.coords.longitude;
+      $scope.accuracy = position.coords.accuracy;
+    }, function (error) {
+      console.log('Error: ' + error.message);
+    });
+
+    //Default values for location. This is UPRM.
+    $scope.latitude = 18.209703;
+    $scope.longitude = -67.14045;
+    $scope.accuracy = 0;
+
+    //Sets the canvas height to look pretty. (42+33) = 75
+    var window_height = $(window).height();
+    $('#map_canvas').height(window_height - (75));
+
+    $('#mapPage').on("pageshow", function() {
+      console.log('PAGESHOW');
+      $('#map_canvas').gmap({'center': (new google.maps.LatLng($scope.latitude, $scope.longitude)), 'zoom': 20});
+      /*
+      $('#mapPage').gmap({'callback':function () {
+        var self = this;
+        $.each($scope.hits, function(i, m) {
+          self.addMarker({'position': m.phone_gps, 'bounds':true});
+          $('#map_canvas').gmap('refresh');
+        });
+        $('#map_canvas').gmap('refresh');
+      }});
+      */
+    });
+
+
+
+
 
 });
 
