@@ -36,6 +36,17 @@ app.factory('phonegapReady', function ($rootScope) {
     };
   });
 
+app.factory('events', function($rootScope, phonegapReady) {
+  return {
+    offline: phonegapReady(function(callback) {
+      document.addEventListener('offline', callback, false);
+    }),
+    backButton: phonegapReady(function(callback) {
+      document.addEventListener('backbutton', callback, false);
+    })
+  };
+});
+
 //Bluetooth factory
 app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
@@ -218,7 +229,18 @@ app.factory('socket', function ($rootScope) {
 });
 
 //LaserTag MEGA controller
-app.controller('LaserTag', function ($scope, bluetooth, socket, $location) {
+app.controller('LaserTag', function ($scope, $location, bluetooth, socket, events) {
+
+    events.offline(function () {
+      alert('Phone is offline! All hell will break lose. PANIC.');
+    });
+
+    events.backButton(function (event) {
+      events.preventDefault();
+      alert('Back button was pressed! This is also a no-no.');
+    });
+
+
     var bluetoothSocket = -1;
     var uuid = '';
     var address = '';
