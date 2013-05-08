@@ -232,8 +232,8 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
 //Socket.IO factory
 app.factory('socket', function ($rootScope) {
-  var socket = io.connect('http://192.168.1.106:3000/');
-  //var socket = io.connect('http://micro2.aws.af.cm/');
+  //var socket = io.connect('http://192.168.1.106:3000/');
+  var socket = io.connect('http://micro2.aws.af.cm/');
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
@@ -945,6 +945,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     $('#mapPage').on("pageshow", function() {
       console.log('PAGESHOW');
       $('#map_canvas').gmap({'center': (new google.maps.LatLng($scope.latitude, $scope.longitude)), 'zoom': 20});
+      $('#map_canvas').gmap('refresh');
       /*
       $('#mapPage').gmap({'callback':function () {
         var self = this;

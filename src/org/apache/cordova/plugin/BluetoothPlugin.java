@@ -57,7 +57,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 public class BluetoothPlugin extends CordovaPlugin {
-	
+					
 	private static final String ACTION_IS_SUPPORTED = 			"isSupported";
 	private static final String ACTION_ENABLE = 				"enable";
 	private static final String ACTION_DISABLE = 				"disable";
@@ -141,8 +141,8 @@ public class BluetoothPlugin extends CordovaPlugin {
 		this.cordova.getActivity().registerReceiver(m_bpBroadcastReceiver, 
 				new IntentFilter(BluetoothPlugin.ACTION_UUID));
 	}
-
 	
+						
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -491,7 +491,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 					deviceInfo.put("name", bluetoothDevice.getName());
 					deviceInfo.put("address", bluetoothDevice.getAddress());
 					deviceInfo.put("isBonded", isBonded);
-					m_discoveredDevices.put(deviceInfo);
+					m_discoveredDevices.put(deviceInfo);		
 				} catch (JSONException e) {
 					logErr(e.getMessage());
 				}
