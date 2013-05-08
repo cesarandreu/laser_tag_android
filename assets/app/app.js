@@ -779,6 +779,7 @@ app.controller('LaserTag', function ($scope, bluetooth, socket, $location) {
             };
 
             $scope.lobby = gameInfo.players;
+            $scope.gameNew();
             //$.mobile.changePage('#joinLobby');
             $location.hash('joinLobby');
           }
