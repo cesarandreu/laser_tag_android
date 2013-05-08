@@ -193,9 +193,8 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
 //Socket.IO factory
 app.factory('socket', function ($rootScope) {
-  //var socket = io.connect('http://192.168.1.106:3000/');
+  var socket = io.connect('http://192.168.1.106:3000/');
   //var socket = io.connect('http://micro2.aws.af.cm/');
-  var socket = io.connect('http://micro2.aws.af.cm/');
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
@@ -219,7 +218,7 @@ app.factory('socket', function ($rootScope) {
 });
 
 //LaserTag MEGA controller
-app.controller('LaserTag', function ($scope, bluetooth, socket) {
+app.controller('LaserTag', function ($scope, bluetooth, socket, $location) {
     var bluetoothSocket = -1;
     var uuid = '';
     var address = '';
@@ -368,7 +367,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
     function handleConnected (message) {
       $scope.gameState = 'Connected';
       alert('Game state is: ' + $scope.gameState);
-      $.mobile.changePage('#main');
+      //$.mobile.changePage('#main');
+      $location.hash('main');
     }
 
     //When the response is 'new'
@@ -669,8 +669,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
           $scope.player.name = $scope.newName;
           $scope.newName = '';
 
-          $.mobile.changePage('#bluetooth');
-
+          //$.mobile.changePage('#bluetooth');
+          $location.hash('bluetooth');
         }
       });
     };
@@ -693,7 +693,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
         } else {
           $scope.gameNew();
           $scope.lobby = playerList;
-          $.mobile.changePage('#hostLobby');
+          //$.mobile.changePage('#hostLobby');
+          $location.hash('hostLobby');
         }
       });
     };
@@ -720,7 +721,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
       $scope.gameReset();
       //Should do something fancier later.
       alert('Host has left the lobby.');
-      $.mobile.changePage('#main');
+      //$.mobile.changePage('#main');
+      $location.hash('main');
     });
 
     //When there is a playerChange in the lobby, update the playerList.
@@ -777,7 +779,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
             };
 
             $scope.lobby = gameInfo.players;
-            $.mobile.changePage('#joinLobby');
+            //$.mobile.changePage('#joinLobby');
+            $location.hash('joinLobby');
           }
         });
       }
@@ -786,13 +789,15 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
 
     //Sends information to phone.
     $scope.sendInformation = function (game, lobby) {
-      $.mobile.changePage('#gameReadyHost');
+      //$.mobile.changePage('#gameReadyHost');
+      $location.hash('gameReadyHost');
       socket.emit('lobby:informationReady');
     };
 
     socket.on('lobby:sendInformation', function() {
       if ($scope.game.host != $scope.player.name) {
-        $.mobile.changePage('#gameReady');
+        //$.mobile.changePage('#gameReady');
+        $location.hash('gameReady');
       }
 
       var enemyArray = [];
@@ -829,7 +834,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
           $scope.scoreList.push({name: $scope.lobby[i].name, score: 0});
       }
 
-      $.mobile.changePage('#gameRunning');
+      //$.mobile.changePage('#gameRunning');
+      $location.hash('gameRunning');
 
     });
 
@@ -845,7 +851,8 @@ app.controller('LaserTag', function ($scope, bluetooth, socket) {
       $scope.gameEnd();
       $scope.winner = winner;
       //alert(winner.name + ' is the winner with ' + winner.score + ' points!');
-      $.mobile.changePage('#gameEnd');
+      //$.mobile.changePage('#gameEnd');
+      $location.hash('gameEnd');
     });
 
     $scope.winner = {name: '', score: 0};
