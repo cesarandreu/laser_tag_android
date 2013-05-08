@@ -115,7 +115,7 @@ public class BluetoothPlugin extends CordovaPlugin {
 		m_bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		m_bpBroadcastReceiver = new BPBroadcastReceiver();
 		
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			try {
 				Field actionUUID = BluetoothDevice.class.getDeclaredField("ACTION_UUID");
 				BluetoothPlugin.ACTION_UUID = (String) actionUUID.get(null);
@@ -303,9 +303,9 @@ public class BluetoothPlugin extends CordovaPlugin {
 			final String address = args.getString(0);
 			this.callback_uuids = callbackContext;
 			
-			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 				String msg = "Not supported, minimum SDK version is :" + 
-						Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1;
+						Build.VERSION_CODES.ICE_CREAM_SANDWICH;
 				logErr(msg);
 				callbackContext.error(msg);
 				return true;

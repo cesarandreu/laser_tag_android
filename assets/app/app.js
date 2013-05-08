@@ -840,6 +840,7 @@ app.controller('LaserTag', function ($scope, bluetooth, socket, $location) {
     });
 
     socket.on('game:score', function (playerList) {
+      console.log(playerList);
       $scope.scoreList = playerList;
     });
 
