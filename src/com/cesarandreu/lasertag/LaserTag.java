@@ -32,7 +32,7 @@ public class LaserTag extends DroidGap
         //super.loadUrl(Config.getStartUrl());
         super.loadUrl("file:///android_asset/app/index.html");
     }	
-    					
+    	
 }	
 	
-		
+							

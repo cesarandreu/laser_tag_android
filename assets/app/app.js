@@ -51,8 +51,8 @@ app.factory('events', function ($rootScope, phonegapReady) {
 //GPS factory
 app.factory('GPS', function ($rootScope, phonegapReady) {
   return {
-    watchPosition: phonegapReady(function (onSuccess, onError) {
-      navigator.geolocation.watchPosition(function () {
+    getPosition: phonegapReady(function (onSuccess, onError) {
+      navigator.geolocation.getCurrentPosition(function () {
         var that = this,
             args = arguments;
 
@@ -232,8 +232,8 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
 //Socket.IO factory
 app.factory('socket', function ($rootScope) {
-  //var socket = io.connect('http://192.168.1.106:3000/');
-  var socket = io.connect('http://micro2.aws.af.cm/');
+  var socket = io.connect('http://192.168.1.106:3000/');
+  //var socket = io.connect('http://micro2.aws.af.cm/');
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
@@ -469,16 +469,84 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
       } else if ($scope.state=='GAME_OVER'){
         console.log('Game is over. Did nothing.');
       } else {
-        $scope.hits.push({enemy: message.id, hitNumber: message.hitNumber, location: message.gps, phone_gps: (new google.maps.LatLng($scope.latitude, $scope.longitude))});
-        WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
-        message.receiver = $scope.player.number;
-        transmitHitData(message);
+
+        //Need to get location here, somehow.
+
+        //Gets the enemy name.
+        var enemyName = getEnemyNameFromNumber(message.id);
+
+        if (!enemyName) {
+          enemyName = 'NAME_NOT_FOUND';
+        }
+
+        //Gets the current time.
+        var currentTime = (new Date()).toLocaleTimeString('en-US');
+
+        //Here I have to do something like:
+        // if message.gps != 'GPS_DATA_NOT_VALID_SORRY'
+        //    Call function that returns a (new google.maps.LatLng(lat,lng)) object
+
+        // The function should:
+        // Take the string and convert it to two variables: LATITUDE, LONGITUDE.
+        // Then it must return (new google.maps.LatLng(LATITUDE, LONGITUDE))
+
+        if (checkHitNumberExists(message.hitNumber)) {
+
+          console.log('Hit number already received. Not storing it again.');
+
+        } else {
+
+          $scope.hits.push({
+            enemy: message.id,
+            eName: enemyName,
+            hitNumber: message.hitNumber,
+            location: message.gps,
+            phone_gps: new google.maps.LatLng($scope.latitude, $scope.longitude),
+            time: currentTime
+          });
+
+          WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
+          message.receiver = $scope.player.number;
+          transmitHitData(message);
+
+        }
+
+
       }
+    }
+
+    //Checks if the hit number has been received before.
+    //TRUE if it has been received before, FALSE otherwise.
+    function checkHitNumberExists (hitNumber) {
+      for (var i = 0; i < $scope.hits.length; i++) {
+          if ($scope.hits[i].hitNumber == hitNumber) {
+              return true;
+          }
+      }
+
+      return false;
+
     }
 
     //When the message is player information
     function handlePlayer (message) {
       $scope.shotsFired = message.shotsFired;
+    }
+
+    function getEnemyNameFromNumber (number) {
+      for (var i = 0; i < $scope.lobby.length; i++) {
+          if ($scope.lobby[i].number == number) {
+              return $scope.lobby[i].name;
+          }
+      }
+
+      for (var j = 0; j < $scope.playerList; j++) {
+          if ($scope.playerList[j].number == number) {
+              return $scope.playerList[j].name;
+          }
+      }
+
+      return '';
     }
 
   //Game Flow Functions
@@ -790,6 +858,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
 
 
   //Lobby logic
+    $scope.playerList = [];
     $scope.lobby = [];
     $scope.gameList = ['No games found'];
 
@@ -912,6 +981,10 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     }
 
     socket.on('game:over', function(winner) {
+
+      //Saves the playerList of this game for the 
+      $scope.playerList = $scope.lobby;
+
       $scope.state = 'GAME_OVER';
       $scope.gameEnd();
       $scope.winner = winner;
@@ -924,41 +997,120 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     $scope.state = '';
 
   //Map related stuff
-    var location = GPS.watchPosition(function (position) {
+    var locationInitial = GPS.getPosition(function (position) {
       //console.log('lat: ' + position.coords.latitude + ', lon: ' + position.coords.longitude + ', accuracy: ' + position.coords.accuracy);
-      $scope.latitude = position.coords.latitude;
-      $scope.longitude = position.coords.longitude;
-      $scope.accuracy = position.coords.accuracy;
+      $scope.latitudeInitial = position.coords.latitude;
+      $scope.longitudeInitial = position.coords.longitude;
+      $scope.accuracyInitial = position.coords.accuracy;
+      console.log('Initial location acquired');
     }, function (error) {
       console.log('Error: ' + error.message);
     });
 
     //Default values for location. This is UPRM.
-    $scope.latitude = 18.209703;
-    $scope.longitude = -67.14045;
-    $scope.accuracy = 0;
+    $scope.latitudeInitial = 18.209703;
+    $scope.longitudeInitial = -67.14045;
+    $scope.accuracyInitial = 2;
 
     //Sets the canvas height to look pretty. (42+33) = 75
     var window_height = $(window).height();
     $('#map_canvas').height(window_height - (75));
 
     $('#mapPage').on("pageshow", function() {
-      console.log('PAGESHOW');
-      $('#map_canvas').gmap({'center': (new google.maps.LatLng($scope.latitude, $scope.longitude)), 'zoom': 20});
-      $('#map_canvas').gmap('refresh');
+
       /*
-      $('#mapPage').gmap({'callback':function () {
-        var self = this;
-        $.each($scope.hits, function(i, m) {
-          self.addMarker({'position': m.phone_gps, 'bounds':true});
-          $('#map_canvas').gmap('refresh');
-        });
-        $('#map_canvas').gmap('refresh');
-      }});
+      //Testing hits
+      $scope.hits.push({
+        enemy: 10,
+        eName: 'Bob',
+        hitNumber: 1,
+        location: 'GPS_DATA_NOT_VALID_SORRY',
+        phone_gps: new google.maps.LatLng(18.209703, -67.14045),
+        time: (new Date()).toLocaleTimeString('en-US')
+      });
+      $scope.hits.push({
+        enemy: 10,
+        eName: 'Bob',
+        hitNumber: 2,
+        location: 'GPS_DATA_NOT_VALID_SORRY',
+        phone_gps: new google.maps.LatLng(18.209703+0.0001, -67.14045+0.0001),
+        time: (new Date()).toLocaleTimeString('en-US')
+      });
+      $scope.hits.push({
+        enemy: 10,
+        eName: 'Bob',
+        hitNumber: 3,
+        location: 'GPS_DATA_NOT_VALID_SORRY',
+        phone_gps: new google.maps.LatLng(18.209703+0.0002, -67.14045+0.0002),
+        time: (new Date()).toLocaleTimeString('en-US')
+      });
       */
+
+      //console.log('PAGESHOW');
+      $('#map_canvas').gmap({
+        'center': new google.maps.LatLng($scope.latitudeInitial, $scope.longitudeInitial),
+        'zoom': 20,
+        'streetViewControl': false,
+        'maxZoom': 20,
+        'minZoom': 18,
+        'mapTypeControl': false
+      });
+
+      $.each($scope.hits, function (i, marker) {
+        //console.log('Marker is: ' + JSON.stringify(marker));
+
+        var message = {content: '<h3>Shot Information</h3>' +
+          '<p>Shot by: <b>' + marker.eName + '</b> </p>' +
+          '<p>Time of shot: <b>' + marker.time + '</b> </p>'
+        };
+
+        var markerValue = {position: '', bounds: true};
+
+        if (marker.location != 'GPS_DATA_NOT_VALID_SORRY') {
+          markerValue.position = marker.location;
+        } else {
+          markerValue.position = marker.phone_gps;
+        }
+
+        $('#map_canvas')
+          .gmap('addMarker', markerValue)
+          .click(function() {
+            $('#map_canvas').gmap('openInfoWindow', message, this);
+          });
+
+        $('#map_canvas').gmap('addShape', 'Circle', { 'strokeColor': "#FF0000", 'strokeOpacity': 0.8, 'strokeWeight': 2, 'fillColor': "#FF0000", 'fillOpacity': 0.35, 'center': markerValue.position, 'radius': 2, clickable: false });
+
+        // .addShape()
+
+      });
+
+      /*
+      $('#map_canvas').gmap('addMarker', {
+        'position': new google.maps.LatLng($scope.latitudeInitial+0.0001, $scope.longitudeInitial+0.0001),
+        'bounds': true
+      });
+      */
+
+      //Refreshes the map so things look nice
+      $('#map_canvas').gmap('refresh');
+
+      //Refreshes the map twice per second
+      map_interval = setInterval(function () {
+        console.log('Refreshing map');
+        $('#map_canvas').gmap('refresh');
+      }, 500);
+
+
     });
 
+    //Destroys the map and clear the interval when you leave the Hit Map page
+    $scope.destroyMap = function() {
+      $('map_canvas').gmap('destroy');
+      clearInterval(map_interval);
+    };
 
+
+    var map_interval;
 
 
 
