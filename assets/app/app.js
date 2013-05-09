@@ -70,7 +70,7 @@ app.factory('GPS', function ($rootScope, phonegapReady) {
             onError.apply(that, args);
           });
         }
-      }, {enableHighAccuracy: true});
+      }, {enableHighAccuracy: true, timeout: 2000});
     })
   };
 });
@@ -232,8 +232,8 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
 //Socket.IO factory
 app.factory('socket', function ($rootScope) {
-  var socket = io.connect('http://192.168.1.106:3000/');
-  //var socket = io.connect('http://micro2.aws.af.cm/');
+  //var socket = io.connect('http://192.168.1.106:3000/');
+  var socket = io.connect('http://micro2.aws.af.cm/');
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
@@ -258,6 +258,11 @@ app.factory('socket', function ($rootScope) {
 
 //LaserTag MEGA controller
 app.controller('LaserTag', function ($scope, $location, bluetooth, socket, events, GPS) {
+
+    socket.on('IMPOSSIBLE', function (error) {
+      alert('FATAL ERROR OCCURED ON THE SERVER\n Error message:' + error.message);
+      alert('Restart the gun and this application.');
+    });
 
     events.offline(function () {
       alert('Phone is offline! All hell will break lose. PANIC.');
@@ -489,30 +494,126 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
         // The function should:
         // Take the string and convert it to two variables: LATITUDE, LONGITUDE.
         // Then it must return (new google.maps.LatLng(LATITUDE, LONGITUDE))
+        if (message.gps != 'GPS_DATA_NOT_VALID_SORRY') {
+          message.gps = convertGPS(message.gps);
+        }
 
         if (checkHitNumberExists(message.hitNumber)) {
-
           console.log('Hit number already received. Not storing it again.');
-
         } else {
 
+          /*
           $scope.hits.push({
             enemy: message.id,
             eName: enemyName,
             hitNumber: message.hitNumber,
             location: message.gps,
-            phone_gps: new google.maps.LatLng($scope.latitude, $scope.longitude),
+            phone_gps: new google.maps.LatLng($scope.latitudeInitial, $scope.longitudeInitial+(Math.floor(Math.random() * 1))),
             time: currentTime
           });
 
           WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
           message.receiver = $scope.player.number;
           transmitHitData(message);
+          */
+
+          hitAssist(message, currentTime, enemyName);
 
         }
 
 
       }
+    }
+
+    //Function that takes gps string, if it's not a non-valid string it returns an object
+    function convertGPS (gps) {
+      if (gps != 'GPS_DATA_NOT_VALID_SORRY') {
+        /*
+        var lat;
+        var lon;
+        //Do something here to convert gps string into lat and lon.
+
+        return new google.maps.LatLng(lat, lon);
+        */
+        //return 'GPS_DATA_NOT_VALID_SORRY';
+
+        var lat;
+        var lon;
+
+        var values = gps.split(',');
+        var degrees = values[0].substring(0,2);
+        var minutes = values[0].substring(2);
+        degrees = parseInt(degrees, 10);
+        minutes = parseFloat(minutes);
+        lat = degrees + minutes/60;
+        if(values[1] === 'S'){
+            lat = 0-lat;
+        }
+        degrees = values[2].substring(0,3);
+        minutes = values[2].substring(3);
+        degrees = parseInt(degrees, 10);
+        minutes = parseFloat(minutes);
+        lon = degrees + minutes/60;
+        if(values[3] === 'W'){
+            lon = 0-lon;
+        }
+
+        console.log('Using gun GPS\n Latitude:' + lat + '\n Longitude: ' + lon );
+
+        return new google.maps.LatLng(lat, lon);
+
+      } else {
+        return 'GPS_DATA_NOT_VALID_SORRY';
+      }
+    }
+
+
+    //Function that gets called when we wanna add stuff to hits array
+    function hitAssist (message, currentTime, enemyName) {
+      GPS.getPosition(function (position) {
+
+        var accuracy;
+
+        if (message.gps != 'GPS_DATA_NOT_VALID_SORRY') {
+          accuracy = 2;
+        } else {
+          accuracy = position.coords.accuracy;
+        }
+
+        $scope.hits.push({
+          enemy: message.id,
+          eName: enemyName,
+          hitNumber: message.hitNumber,
+          location: message.gps,
+          phone_gps: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+          time: currentTime,
+          accuracy: accuracy
+        });
+
+        WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
+        message.receiver = $scope.player.number;
+        transmitHitData(message);
+
+      },
+      function (error) {
+        console.log('Error getting GPS position. Using initial position.');
+
+        $scope.hits.push({
+          enemy: message.id,
+          eName: enemyName,
+          hitNumber: message.hitNumber,
+          location: message.gps,
+          phone_gps: new google.maps.LatLng($scope.latitudeInitial, $scope.longitudeInitial),
+          time: currentTime,
+          accuracy: 2
+        });
+
+        WriteAcknowledge(bluetooth, bluetoothSocket, message.hitNumber);
+        message.receiver = $scope.player.number;
+        transmitHitData(message);
+
+
+      });
     }
 
     //Checks if the hit number has been received before.
@@ -997,8 +1098,8 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
     $scope.state = '';
 
   //Map related stuff
-    var locationInitial = GPS.getPosition(function (position) {
-      //console.log('lat: ' + position.coords.latitude + ', lon: ' + position.coords.longitude + ', accuracy: ' + position.coords.accuracy);
+    GPS.getPosition(function (position) {
+      console.log('lat: ' + position.coords.latitude + ', lon: ' + position.coords.longitude + ', accuracy: ' + position.coords.accuracy);
       $scope.latitudeInitial = position.coords.latitude;
       $scope.longitudeInitial = position.coords.longitude;
       $scope.accuracyInitial = position.coords.accuracy;
@@ -1026,7 +1127,8 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
         hitNumber: 1,
         location: 'GPS_DATA_NOT_VALID_SORRY',
         phone_gps: new google.maps.LatLng(18.209703, -67.14045),
-        time: (new Date()).toLocaleTimeString('en-US')
+        time: (new Date()).toLocaleTimeString('en-US'),
+        accuracy: 5
       });
       $scope.hits.push({
         enemy: 10,
@@ -1034,7 +1136,8 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
         hitNumber: 2,
         location: 'GPS_DATA_NOT_VALID_SORRY',
         phone_gps: new google.maps.LatLng(18.209703+0.0001, -67.14045+0.0001),
-        time: (new Date()).toLocaleTimeString('en-US')
+        time: (new Date()).toLocaleTimeString('en-US'),
+        accuracy: 10
       });
       $scope.hits.push({
         enemy: 10,
@@ -1042,7 +1145,8 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
         hitNumber: 3,
         location: 'GPS_DATA_NOT_VALID_SORRY',
         phone_gps: new google.maps.LatLng(18.209703+0.0002, -67.14045+0.0002),
-        time: (new Date()).toLocaleTimeString('en-US')
+        time: (new Date()).toLocaleTimeString('en-US'),
+        accuracy: 2
       });
       */
 
@@ -1055,6 +1159,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
         'minZoom': 18,
         'mapTypeControl': false
       });
+
 
       $.each($scope.hits, function (i, marker) {
         //console.log('Marker is: ' + JSON.stringify(marker));
@@ -1072,17 +1177,18 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
           markerValue.position = marker.phone_gps;
         }
 
+
         $('#map_canvas')
           .gmap('addMarker', markerValue)
           .click(function() {
             $('#map_canvas').gmap('openInfoWindow', message, this);
           });
 
-        $('#map_canvas').gmap('addShape', 'Circle', { 'strokeColor': "#FF0000", 'strokeOpacity': 0.8, 'strokeWeight': 2, 'fillColor': "#FF0000", 'fillOpacity': 0.35, 'center': markerValue.position, 'radius': 2, clickable: false });
 
-        // .addShape()
+        $('#map_canvas').gmap('addShape', 'Circle', { 'strokeColor': "#FF0000", 'strokeOpacity': 0.1, 'strokeWeight': 0.35, 'fillColor': "#FF0000", 'fillOpacity': 0.05, 'center': markerValue.position, 'radius': marker.accuracy, clickable: false });
 
       });
+
 
       /*
       $('#map_canvas').gmap('addMarker', {
@@ -1096,7 +1202,7 @@ app.controller('LaserTag', function ($scope, $location, bluetooth, socket, event
 
       //Refreshes the map twice per second
       map_interval = setInterval(function () {
-        console.log('Refreshing map');
+        //console.log('Refreshing map');
         $('#map_canvas').gmap('refresh');
       }, 500);
 
