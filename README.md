@@ -1,4 +1,4 @@
-#Laser Tag Reloaded - Smartphone application
+#Laser Tag Reloaded - Android application
 
 ---
 
@@ -10,13 +10,13 @@ The program flow is simple: You pair the smartphone with the gun/vest, you join 
 
 Each player is assigned a number, which gets transmitted by the infrared laser. When another player receives a valid enemy number it transmits this to the smartphone, and then the smartphone transmits it to the server.
 
-At the end of each game you can see a map with markers showing the places where you got shot. 
+When the end game conditions are met, the server nofies every player. At the end of each game you can see a map with markers showing the places where you got shot. 
 
 ---
 
 ###Project Links
 
-The project itself has three components: 
+The project has three components: 
 
 * [__System__ (Gun + Vest)](https://github.com/cesarandreu/laser_tag_reloaded)
 
