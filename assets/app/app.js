@@ -232,8 +232,10 @@ app.factory('bluetooth', function ($rootScope, phonegapReady) {
 
 //Socket.IO factory
 app.factory('socket', function ($rootScope) {
+  //INPUT THE IP ADDRESS WHERE YOU WANT SOCKET.IO TO CONNECT HERE
+  var socket = io.connect('YOUR_IP_HERE');
   //var socket = io.connect('http://192.168.1.106:3000/');
-  var socket = io.connect('http://micro2.aws.af.cm/');
+  //var socket = io.connect('http://micro2.aws.af.cm/');
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
